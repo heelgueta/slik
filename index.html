@@ -10,49 +10,28 @@
 
 <body>
     <div id="app">
-        <!-- TOP AREA: Progress, Info, Navigation -->
+        <!-- TOP AREA: Progress, Info, Theme Toggle -->
         <div class="top-area">
             <div class="header">
                 <button id="backBtn" class="nav-btn">←</button>
                 <div class="app-info">
                     <h1 class="app-title">SLIK Survey</h1>
                     <div class="progress-info">
-                        Section <span id="currentSection">1</span> of <span id="totalSections">3</span>
+                        Section <span id="currentSection">1</span> of <span id="totalSections">4</span>
                         • Item <span id="currentItem">1</span> of <span id="totalItems">5</span>
                     </div>
                 </div>
-                <button id="menuBtn" class="nav-btn">☰</button>
+                <button id="themeBtn" class="nav-btn">🌙</button>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
 
-        <!-- MIDDLE AREA: Form Sections and Item Cards -->
-        <div class="middle-area" id="middleArea">
-            <div class="section-intro" id="sectionIntro">
-                <h2 class="section-title" id="sectionTitle">Attitudes Toward Statistics</h2>
-                <p class="section-description" id="sectionDescription">
-                    Let's explore your feelings about statistics and data analysis.
-                </p>
-                <button class="start-section-btn" id="startSectionBtn">Start Section</button>
-            </div>
-
-            <div class="cards-container" id="cardsContainer">
-                <!-- Item cards will be dynamically inserted here -->
-            </div>
-            
-            <!-- Navigation buttons for cards -->
-            <div class="card-nav" id="cardNav">
-                <button class="card-nav-btn prev" id="prevCardBtn">← Previous</button>
-                <button class="card-nav-btn next" id="nextCardBtn">Next →</button>
-            </div>
-        </div>
-
-        <!-- BOTTOM AREA: Response Interface -->
+        <!-- BOTTOM AREA: Main Content (Cards, Responses, Everything) -->
         <div class="bottom-area" id="bottomArea">
-            <div class="response-container" id="responseContainer">
-                <!-- Response interface will be dynamically inserted here -->
+            <div class="content-container" id="contentContainer">
+                <!-- All content (section intros, cards, responses) will be here -->
             </div>
         </div>
     </div>

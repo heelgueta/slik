@@ -2,16 +2,56 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Dark theme (default) */
+    --bg-primary: #000;
+    --bg-secondary: #111;
+    --bg-tertiary: #222;
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    --border-color: #333;
+    --accent-color: #fff;
+    --likert-1: #ff6b6b;
+    --likert-2: #ffa726;
+    --likert-3: #ffd54f;
+    --likert-4: #66bb6a;
+    --likert-5: #42a5f5;
+    --yes-color: #4CAF50;
+    --no-color: #f44336;
+}
+
+[data-theme="light"] {
+    --bg-primary: #fff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e0e0e0;
+    --text-primary: #000;
+    --text-secondary: rgba(0, 0, 0, 0.8);
+    --text-muted: rgba(0, 0, 0, 0.6);
+    --border-color: #ddd;
+    --accent-color: #000;
+    --likert-1: #d32f2f;
+    --likert-2: #f57c00;
+    --likert-3: #fbc02d;
+    --likert-4: #388e3c;
+    --likert-5: #1976d2;
+    --yes-color: #2e7d32;
+    --no-color: #c62828;
+}
+
 body, html {
     margin: 0;
     padding: 0;
     height: 100vh;
     width: 100vw;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #000;
-    color: #fff;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     overflow: hidden;
     position: fixed;
+    /* Prevent pull-to-refresh */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 #app {
@@ -19,28 +59,32 @@ body, html {
     display: flex;
     flex-direction: column;
     position: relative;
+    /* Account for Android UI bar */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top);
 }
 
 /* TOP AREA */
 .top-area {
-    background: #000;
-    padding: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #333;
+    background: var(--bg-primary);
+    padding: 15px 20px 10px;
+    border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    /* Account for Android status bar */
+    padding-top: max(15px, env(safe-area-inset-top));
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .nav-btn {
     background: transparent;
-    border: 1px solid #fff;
-    color: #fff;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
     font-size: 1.2em;
     padding: 8px 12px;
     border-radius: 50%;
@@ -54,8 +98,8 @@ body, html {
 }
 
 .nav-btn:hover {
-    background: #fff;
-    color: #000;
+    background: var(--accent-color);
+    color: var(--bg-primary);
 }
 
 .app-info {
@@ -64,39 +108,48 @@ body, html {
 }
 
 .app-title {
-    font-size: 1.5em;
+    font-size: 1.3em;
     font-weight: 700;
     margin: 0;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .progress-info {
-    font-size: 0.9em;
+    font-size: 0.8em;
     opacity: 0.8;
 }
 
 .progress-bar {
-    height: 4px;
-    background: #333;
+    height: 3px;
+    background: var(--border-color);
     border-radius: 2px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background: #fff;
+    background: var(--accent-color);
     width: 0%;
     transition: width 0.3s ease;
 }
 
-/* MIDDLE AREA */
-.middle-area {
+/* BOTTOM AREA - Main Content */
+.bottom-area {
     flex: 1;
+    background: var(--bg-primary);
     overflow: hidden;
     position: relative;
-    background: #000;
+    /* Account for Android navigation bar */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
+.content-container {
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Section Introduction */
 .section-intro {
     padding: 40px 20px;
     text-align: center;
@@ -105,6 +158,7 @@ body, html {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background: var(--bg-primary);
 }
 
 .section-title {
@@ -113,6 +167,7 @@ body, html {
     margin: 0;
     margin-bottom: 20px;
     line-height: 1.2;
+    color: var(--text-primary);
 }
 
 .section-description {
@@ -122,11 +177,12 @@ body, html {
     margin-bottom: 40px;
     max-width: 600px;
     line-height: 1.4;
+    color: var(--text-secondary);
 }
 
 .start-section-btn {
-    background: #fff;
-    color: #000;
+    background: var(--accent-color);
+    color: var(--bg-primary);
     border: none;
     padding: 15px 30px;
     font-size: 1.2em;
@@ -137,23 +193,18 @@ body, html {
 }
 
 .start-section-btn:hover {
-    background: #ccc;
+    background: var(--bg-tertiary);
     transform: scale(1.05);
 }
 
-.cards-container {
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-}
-
+/* Item Cards */
 .item-card {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: #111;
+    background: var(--bg-secondary);
     margin: 20px;
     border-radius: 15px;
     padding: 30px;
@@ -164,7 +215,7 @@ body, html {
     text-align: center;
     transform: translateY(100%);
     transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    border: 1px solid #333;
+    border: 1px solid var(--border-color);
     cursor: pointer;
 }
 
@@ -199,60 +250,14 @@ body, html {
     margin: 0;
     margin-bottom: 20px;
     line-height: 1.3;
+    color: var(--text-primary);
 }
 
 .item-number {
     font-size: 0.9em;
     opacity: 0.6;
     margin-bottom: 10px;
-}
-
-/* Card Navigation */
-.card-nav {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 20px;
-    z-index: 10;
-}
-
-.card-nav-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid #fff;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.9em;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-}
-
-.card-nav-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-}
-
-.card-nav-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* BOTTOM AREA */
-.bottom-area {
-    background: #000;
-    border-top: 1px solid #333;
-    flex-shrink: 0;
-    padding: 20px;
-}
-
-.response-container {
-    max-width: 600px;
-    margin: 0 auto;
+    color: var(--text-muted);
 }
 
 /* Likert Scale Response */
@@ -262,6 +267,11 @@ body, html {
     gap: 8px;
     touch-action: pan-x;
     user-select: none;
+    padding: 20px;
+    margin: 20px;
+    background: var(--bg-secondary);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
 }
 
 .likert-option {
@@ -273,20 +283,42 @@ body, html {
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    border: 1px solid #333;
-    background: #111;
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    position: relative;
+    overflow: hidden;
+}
+
+.likert-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--likert-color);
+    opacity: 0.1;
+    transition: opacity 0.3s ease;
 }
 
 .likert-option:hover {
-    background: #222;
-    border-color: #fff;
+    background: var(--bg-secondary);
+    border-color: var(--accent-color);
+}
+
+.likert-option:hover::before {
+    opacity: 0.2;
 }
 
 .likert-option.selected {
-    background: #fff;
-    color: #000;
-    border-color: #fff;
+    background: var(--likert-color);
+    color: var(--bg-primary);
+    border-color: var(--likert-color);
     transform: scale(1.05);
+}
+
+.likert-option.selected::before {
+    opacity: 0.3;
 }
 
 .option-text {
@@ -295,23 +327,36 @@ body, html {
     text-align: center;
     line-height: 1.2;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .likert-option.selected .option-text {
     font-weight: 600;
 }
 
+/* Color assignments for Likert options */
+.likert-option[data-value="1"] { --likert-color: var(--likert-1); }
+.likert-option[data-value="2"] { --likert-color: var(--likert-2); }
+.likert-option[data-value="3"] { --likert-color: var(--likert-3); }
+.likert-option[data-value="4"] { --likert-color: var(--likert-4); }
+.likert-option[data-value="5"] { --likert-color: var(--likert-5); }
+
 /* Yes/No Response - Full Card Style */
 .yes-no-card {
-    background: #111;
-    border: 1px solid #333;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 15px;
     padding: 30px;
-    margin: 20px 0;
+    margin: 20px;
     text-align: center;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    height: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .yes-no-card.swiping-right {
@@ -324,12 +369,18 @@ body, html {
     opacity: 0.7;
 }
 
+.yes-no-card.swiping-center {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+}
+
 .yes-no-question {
     font-size: clamp(1.5em, 6vw, 2.5em);
     font-weight: 600;
     margin: 0;
     margin-bottom: 30px;
     line-height: 1.3;
+    color: var(--text-primary);
 }
 
 .yes-no-buttons {
@@ -344,9 +395,9 @@ body, html {
     flex: 1;
     max-width: 150px;
     padding: 20px;
-    border: 2px solid #fff;
+    border: 2px solid var(--accent-color);
     background: transparent;
-    color: #fff;
+    color: var(--accent-color);
     font-size: clamp(1.2em, 5vw, 1.8em);
     font-weight: 600;
     border-radius: 15px;
@@ -356,40 +407,40 @@ body, html {
 }
 
 .yes-no-btn:hover {
-    background: #fff;
-    color: #000;
+    background: var(--accent-color);
+    color: var(--bg-primary);
     transform: scale(1.05);
 }
 
 .yes-no-btn.yes {
-    border-color: #4CAF50;
-    color: #4CAF50;
+    border-color: var(--yes-color);
+    color: var(--yes-color);
 }
 
 .yes-no-btn.yes:hover,
 .yes-no-btn.yes.selected {
-    background: #4CAF50;
-    color: #fff;
+    background: var(--yes-color);
+    color: var(--bg-primary);
 }
 
 .yes-no-btn.no {
-    border-color: #f44336;
-    color: #f44336;
+    border-color: var(--no-color);
+    color: var(--no-color);
 }
 
 .yes-no-btn.no:hover,
 .yes-no-btn.no.selected {
-    background: #f44336;
-    color: #fff;
+    background: var(--no-color);
+    color: var(--bg-primary);
 }
 
 /* Semantic Differential Scale */
 .semantic-scale {
-    background: #111;
-    border: 1px solid #333;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 15px;
     padding: 30px;
-    margin: 20px 0;
+    margin: 20px;
     position: relative;
 }
 
@@ -400,17 +451,19 @@ body, html {
     margin-bottom: 30px;
     text-align: center;
     line-height: 1.3;
+    color: var(--text-primary);
 }
 
 .semantic-bar {
     height: 60px;
-    background: #333;
+    background: var(--bg-tertiary);
     border-radius: 30px;
     position: relative;
     margin: 20px 0;
     overflow: hidden;
     cursor: pointer;
     touch-action: pan-x;
+    border: 1px solid var(--border-color);
 }
 
 .semantic-slider {
@@ -419,7 +472,7 @@ body, html {
     left: 10px;
     width: 50px;
     height: 50px;
-    background: #fff;
+    background: var(--accent-color);
     border-radius: 50%;
     transition: left 0.3s ease;
     z-index: 2;
@@ -432,6 +485,7 @@ body, html {
     margin-top: 15px;
     font-size: clamp(0.9em, 4vw, 1.1em);
     font-weight: 500;
+    color: var(--text-secondary);
 }
 
 .semantic-label {
@@ -453,41 +507,35 @@ body, html {
     margin-bottom: 20px;
     font-size: clamp(0.9em, 4vw, 1.1em);
     opacity: 0.8;
+    color: var(--text-secondary);
+    padding: 0 20px;
 }
 
 /* Responsive Design */
 @media (min-width: 768px) {
-    .response-container {
-        max-width: 500px;
-    }
-    
     .likert-scale {
-        max-width: 400px;
-        margin: 0 auto;
+        max-width: 500px;
+        margin: 20px auto;
     }
     
-    .yes-no-buttons {
-        max-width: 400px;
-        margin: 0 auto;
+    .yes-no-card {
+        max-width: 500px;
+        margin: 20px auto;
     }
     
     .semantic-scale {
         max-width: 500px;
-        margin: 0 auto;
+        margin: 20px auto;
     }
 }
 
 @media (orientation: landscape) and (min-height: 500px) {
     .top-area {
-        padding: 15px 20px 10px;
-    }
-    
-    .middle-area {
-        padding: 10px 0;
+        padding: 10px 20px 5px;
     }
     
     .bottom-area {
-        padding: 15px 20px;
+        padding: 5px 0;
     }
 }
 
@@ -503,4 +551,21 @@ body, html {
 /* Smooth transitions */
 * {
     transition: all 0.3s ease;
+}
+
+/* Prevent pull-to-refresh */
+body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Android safe area adjustments */
+@supports (padding: max(0px)) {
+    .top-area {
+        padding-top: max(15px, env(safe-area-inset-top));
+    }
+    
+    .bottom-area {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
 }

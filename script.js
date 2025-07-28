@@ -78,22 +78,13 @@ const surveyConfig = {
 
 // DOM Elements
 const backBtn = document.getElementById('backBtn');
-const menuBtn = document.getElementById('menuBtn');
+const themeBtn = document.getElementById('themeBtn');
 const currentSectionEl = document.getElementById('currentSection');
 const totalSectionsEl = document.getElementById('totalSections');
 const currentItemEl = document.getElementById('currentItem');
 const totalItemsEl = document.getElementById('totalItems');
 const progressFillEl = document.getElementById('progressFill');
-const sectionIntroEl = document.getElementById('sectionIntro');
-const sectionTitleEl = document.getElementById('sectionTitle');
-const sectionDescriptionEl = document.getElementById('sectionDescription');
-const startSectionBtn = document.getElementById('startSectionBtn');
-const cardsContainerEl = document.getElementById('cardsContainer');
-const cardNavEl = document.getElementById('cardNav');
-const prevCardBtn = document.getElementById('prevCardBtn');
-const nextCardBtn = document.getElementById('nextCardBtn');
-const bottomAreaEl = document.getElementById('bottomArea');
-const responseContainerEl = document.getElementById('responseContainer');
+const contentContainerEl = document.getElementById('contentContainer');
 
 // State
 let currentSectionIndex = 0;
@@ -103,23 +94,59 @@ let responses = [];
 let gesture = { type: null, startY: null, currentY: null, startX: null, currentX: null };
 let isSliding = false;
 let isSwipingCard = false;
+let currentTheme = 'dark';
 
 // Initialize
 function init() {
     totalSectionsEl.textContent = surveyConfig.sections.length;
     showSectionIntro();
     updateProgress();
+    setupThemeToggle();
+    preventPullToRefresh();
+}
+
+function setupThemeToggle() {
+    themeBtn.addEventListener('click', () => {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeBtn.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+    });
+}
+
+function preventPullToRefresh() {
+    // Prevent pull-to-refresh on mobile
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            gesture.startY = touch.clientY;
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const deltaY = touch.clientY - gesture.startY;
+            
+            // Prevent pull-to-refresh
+            if (deltaY > 0 && window.scrollY === 0) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
 }
 
 function showSectionIntro() {
     const section = surveyConfig.sections[currentSectionIndex];
-    sectionTitleEl.textContent = section.title;
-    sectionDescriptionEl.textContent = section.description;
     
-    sectionIntroEl.style.display = 'flex';
-    cardsContainerEl.innerHTML = '';
-    cardNavEl.style.display = 'none';
-    bottomAreaEl.style.display = 'none';
+    contentContainerEl.innerHTML = `
+        <div class="section-intro">
+            <h2 class="section-title">${section.title}</h2>
+            <p class="section-description">${section.description}</p>
+            <button class="start-section-btn" id="startSectionBtn">Start Section</button>
+        </div>
+    `;
+    
+    document.getElementById('startSectionBtn').addEventListener('click', startSection);
     
     isInSection = false;
 }
@@ -128,21 +155,16 @@ function startSection() {
     const section = surveyConfig.sections[currentSectionIndex];
     currentItemIndex = 0;
     
-    sectionIntroEl.style.display = 'none';
-    cardNavEl.style.display = 'flex';
-    bottomAreaEl.style.display = 'block';
-    
     createCards(section);
     showCurrentCard();
     updateResponseInterface();
-    updateCardNav();
     
     isInSection = true;
     updateProgress();
 }
 
 function createCards(section) {
-    cardsContainerEl.innerHTML = '';
+    contentContainerEl.innerHTML = '';
     
     if (section.type === 'semantic') {
         section.items.forEach((item, index) => {
@@ -155,7 +177,7 @@ function createCards(section) {
                 <div class="item-question">${item.question}</div>
             `;
             
-            cardsContainerEl.appendChild(card);
+            contentContainerEl.appendChild(card);
         });
     } else {
         section.items.forEach((item, index) => {
@@ -168,7 +190,7 @@ function createCards(section) {
                 <div class="item-question">${item}</div>
             `;
             
-            cardsContainerEl.appendChild(card);
+            contentContainerEl.appendChild(card);
         });
     }
 }
@@ -189,13 +211,6 @@ function showCurrentCard() {
     });
 }
 
-function updateCardNav() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    
-    prevCardBtn.disabled = currentItemIndex === 0;
-    nextCardBtn.disabled = currentItemIndex === section.items.length - 1;
-}
-
 function updateResponseInterface() {
     const section = surveyConfig.sections[currentSectionIndex];
     
@@ -212,7 +227,8 @@ function createLikertResponse() {
     const section = surveyConfig.sections[currentSectionIndex];
     const currentItem = section.items[currentItemIndex];
     
-    responseContainerEl.innerHTML = `
+    const responseEl = document.createElement('div');
+    responseEl.innerHTML = `
         <div class="response-instructions">Tap or slide to indicate your agreement</div>
         <div class="likert-scale" id="likertScale">
             <div class="likert-option" data-value="1">
@@ -233,6 +249,7 @@ function createLikertResponse() {
         </div>
     `;
     
+    contentContainerEl.appendChild(responseEl);
     setupLikertInteractions();
 }
 
@@ -240,7 +257,8 @@ function createYesNoResponse() {
     const section = surveyConfig.sections[currentSectionIndex];
     const currentItem = section.items[currentItemIndex];
     
-    responseContainerEl.innerHTML = `
+    const responseEl = document.createElement('div');
+    responseEl.innerHTML = `
         <div class="yes-no-card" id="yesNoCard">
             <div class="yes-no-question">${currentItem}</div>
             <div class="yes-no-buttons">
@@ -250,6 +268,7 @@ function createYesNoResponse() {
         </div>
     `;
     
+    contentContainerEl.appendChild(responseEl);
     setupYesNoInteractions();
 }
 
@@ -257,7 +276,8 @@ function createSemanticResponse() {
     const section = surveyConfig.sections[currentSectionIndex];
     const currentItem = section.items[currentItemIndex];
     
-    responseContainerEl.innerHTML = `
+    const responseEl = document.createElement('div');
+    responseEl.innerHTML = `
         <div class="semantic-scale" id="semanticScale">
             <div class="semantic-question">${currentItem.question}</div>
             <div class="semantic-bar" id="semanticBar">
@@ -270,6 +290,7 @@ function createSemanticResponse() {
         </div>
     `;
     
+    contentContainerEl.appendChild(responseEl);
     setupSemanticInteractions();
 }
 
@@ -365,46 +386,52 @@ function setupYesNoInteractions() {
     yesBtn.addEventListener('click', () => selectYesNoOption('yes'));
     noBtn.addEventListener('click', () => selectYesNoOption('no'));
     
-    // Swipe gestures
+    // Swipe gestures with improved behavior
     let startX = 0;
     let startY = 0;
+    let isDragging = false;
     
     card.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
+        isDragging = true;
         isSwipingCard = true;
     });
     
     card.addEventListener('touchmove', (e) => {
-        if (!isSwipingCard) return;
+        if (!isDragging) return;
         e.preventDefault();
         
         const currentX = e.touches[0].clientX;
         const deltaX = currentX - startX;
         
+        // Allow movement but keep centered position
         if (Math.abs(deltaX) > 20) {
             if (deltaX > 0) {
                 card.classList.add('swiping-right');
-                card.classList.remove('swiping-left');
+                card.classList.remove('swiping-left', 'swiping-center');
             } else {
                 card.classList.add('swiping-left');
-                card.classList.remove('swiping-right');
+                card.classList.remove('swiping-right', 'swiping-center');
             }
+        } else {
+            card.classList.add('swiping-center');
+            card.classList.remove('swiping-right', 'swiping-left');
         }
     });
     
     card.addEventListener('touchend', (e) => {
-        if (!isSwipingCard) return;
+        if (!isDragging) return;
         
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
         const deltaX = endX - startX;
         const deltaY = endY - startY;
         
-        card.classList.remove('swiping-right', 'swiping-left');
+        card.classList.remove('swiping-right', 'swiping-left', 'swiping-center');
         
-        // Check if it's a horizontal swipe (not vertical)
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+        // Only proceed if it's a clear horizontal swipe
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
             if (deltaX > 0) {
                 selectYesNoOption('yes');
             } else {
@@ -412,6 +439,7 @@ function setupYesNoInteractions() {
             }
         }
         
+        isDragging = false;
         isSwipingCard = false;
     });
 }
@@ -567,7 +595,6 @@ function nextItem() {
         currentItemIndex++;
         showCurrentCard();
         updateResponseInterface();
-        updateCardNav();
         updateProgress();
     } else {
         nextSection();
@@ -579,7 +606,6 @@ function previousItem() {
         currentItemIndex--;
         showCurrentCard();
         updateResponseInterface();
-        updateCardNav();
         updateProgress();
     } else {
         previousSection();
@@ -644,33 +670,31 @@ function showCompletion() {
     const yesCount = yesNoResponses.filter(r => r.value === 'yes').length;
     const noCount = yesNoResponses.filter(r => r.value === 'no').length;
     
-    sectionIntroEl.innerHTML = `
-        <h2 class="section-title">Survey Complete!</h2>
-        <p class="section-description">
-            You responded to ${totalResponses} items across ${surveyConfig.sections.length} sections.
-            <br><br>
-            Average Likert score: ${avgLikert.toFixed(1)}/5
-            <br>
-            Average Semantic score: ${avgSemantic.toFixed(1)}/5
-            <br>
-            Yes/No ratio: ${yesCount} yes, ${noCount} no
-        </p>
+    contentContainerEl.innerHTML = `
+        <div class="section-intro">
+            <h2 class="section-title">Survey Complete!</h2>
+            <p class="section-description">
+                You responded to ${totalResponses} items across ${surveyConfig.sections.length} sections.
+                <br><br>
+                Average Likert score: ${avgLikert.toFixed(1)}/5
+                <br>
+                Average Semantic score: ${avgSemantic.toFixed(1)}/5
+                <br>
+                Yes/No ratio: ${yesCount} yes, ${noCount} no
+            </p>
+        </div>
     `;
-    
-    sectionIntroEl.style.display = 'flex';
-    cardNavEl.style.display = 'none';
-    bottomAreaEl.style.display = 'none';
     
     console.log('All responses:', responses);
 }
 
-// Middle area swipe gestures with animations
-cardsContainerEl.addEventListener('touchstart', (e) => {
+// Swipe gestures for navigation
+contentContainerEl.addEventListener('touchstart', (e) => {
     if (!isInSection) return;
     gesture.startY = e.touches[0].clientY;
 });
 
-cardsContainerEl.addEventListener('touchmove', (e) => {
+contentContainerEl.addEventListener('touchmove', (e) => {
     if (!isInSection) return;
     const deltaY = e.touches[0].clientY - gesture.startY;
     
@@ -688,7 +712,7 @@ cardsContainerEl.addEventListener('touchmove', (e) => {
     }
 });
 
-cardsContainerEl.addEventListener('touchend', (e) => {
+contentContainerEl.addEventListener('touchend', (e) => {
     if (!isInSection) return;
     const deltaY = e.changedTouches[0].clientY - gesture.startY;
     
@@ -716,20 +740,6 @@ backBtn.addEventListener('click', () => {
         previousSection();
     }
 });
-
-prevCardBtn.addEventListener('click', () => {
-    if (isInSection) {
-        previousItem();
-    }
-});
-
-nextCardBtn.addEventListener('click', () => {
-    if (isInSection) {
-        nextItem();
-    }
-});
-
-startSectionBtn.addEventListener('click', startSection);
 
 // Keyboard navigation
 document.addEventListener('keydown', (e) => {
