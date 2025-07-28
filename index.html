@@ -4,51 +4,49 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>SLIK - Reinventing Likert Scales</title>
+    <title>SLIK - Multi-Section Survey</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
     <div id="app">
-        <div class="slide">
+        <!-- TOP AREA: Progress, Info, Navigation -->
+        <div class="top-area">
             <div class="header">
-                <button id="backBtn">←</button>
-                <div class="progress">Item <span id="currentItem">1</span> of <span id="totalItems">10</span></div>
+                <button id="backBtn" class="nav-btn">←</button>
+                <div class="app-info">
+                    <h1 class="app-title">SLIK Survey</h1>
+                    <div class="progress-info">
+                        Section <span id="currentSection">1</span> of <span id="totalSections">3</span>
+                        • Item <span id="currentItem">1</span> of <span id="totalItems">5</span>
+                    </div>
+                </div>
+                <button id="menuBtn" class="nav-btn">☰</button>
             </div>
-            
-            <div class="question-container">
-                <h2 id="question">I enjoy statistics</h2>
-                <div class="question-number">#1</div>
-            </div>
-            
-            <div class="response-display">
-                <div class="response-text" id="responseText">Tap or slide to respond</div>
-                <div class="response-indicator" id="responseIndicator"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
-        
-        <div class="scale-container">
-            <div class="likert-scale" id="likertScale">
-                <div class="likert-option" data-value="1">
-                    <div class="option-color"></div>
-                    <div class="option-text">Strongly Disagree</div>
-                </div>
-                <div class="likert-option" data-value="2">
-                    <div class="option-color"></div>
-                    <div class="option-text">Disagree</div>
-                </div>
-                <div class="likert-option" data-value="3">
-                    <div class="option-color"></div>
-                    <div class="option-text">Neutral</div>
-                </div>
-                <div class="likert-option" data-value="4">
-                    <div class="option-color"></div>
-                    <div class="option-text">Agree</div>
-                </div>
-                <div class="likert-option" data-value="5">
-                    <div class="option-color"></div>
-                    <div class="option-text">Strongly Agree</div>
-                </div>
+
+        <!-- MIDDLE AREA: Form Sections and Item Cards -->
+        <div class="middle-area" id="middleArea">
+            <div class="section-intro" id="sectionIntro">
+                <h2 class="section-title" id="sectionTitle">Attitudes Toward Statistics</h2>
+                <p class="section-description" id="sectionDescription">
+                    Let's explore your feelings about statistics and data analysis.
+                </p>
+                <button class="start-section-btn" id="startSectionBtn">Start Section</button>
+            </div>
+
+            <div class="cards-container" id="cardsContainer">
+                <!-- Item cards will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- BOTTOM AREA: Response Interface -->
+        <div class="bottom-area" id="bottomArea">
+            <div class="response-container" id="responseContainer">
+                <!-- Response interface will be dynamically inserted here -->
             </div>
         </div>
     </div>
