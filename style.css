@@ -1,0 +1,267 @@
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+    position: fixed;
+}
+
+#app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.slide {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    padding-bottom: 0;
+    position: relative;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+#backBtn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 1.5em;
+    padding: 12px 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+#backBtn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.progress {
+    color: white;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.question-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+#question {
+    color: white;
+    font-size: 2.2em;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    max-width: 90%;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.question-number {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1em;
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+.response-display {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.response-text {
+    color: white;
+    font-size: 1.1em;
+    opacity: 0.9;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.response-indicator {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.response-indicator::before {
+    content: '';
+    display: block;
+    height: 100%;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+    transition: width 0.3s ease;
+}
+
+.scale-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    padding: 30px 20px 40px;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+}
+
+.likert-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    touch-action: pan-x;
+    user-select: none;
+}
+
+.likert-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 8px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.likert-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--option-color-start), var(--option-color-end));
+    opacity: 0.1;
+    transition: opacity 0.3s ease;
+}
+
+.likert-option:hover::before {
+    opacity: 0.2;
+}
+
+.likert-option.selected {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.likert-option.selected::before {
+    opacity: 0.3;
+}
+
+.option-color {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--option-color-start), var(--option-color-end));
+    transition: all 0.3s ease;
+}
+
+.likert-option.selected .option-color {
+    transform: scale(1.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.option-text {
+    font-size: 0.75em;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.likert-option.selected .option-text {
+    font-weight: 600;
+    color: #000;
+}
+
+/* Color gradients for each option */
+.likert-option[data-value="1"] {
+    --option-color-start: #ff6b6b;
+    --option-color-end: #ee5a52;
+}
+
+.likert-option[data-value="2"] {
+    --option-color-start: #ffa726;
+    --option-color-end: #ff9800;
+}
+
+.likert-option[data-value="3"] {
+    --option-color-start: #ffd54f;
+    --option-color-end: #ffc107;
+}
+
+.likert-option[data-value="4"] {
+    --option-color-start: #66bb6a;
+    --option-color-end: #4caf50;
+}
+
+.likert-option[data-value="5"] {
+    --option-color-start: #42a5f5;
+    --option-color-end: #2196f3;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    #question {
+        font-size: 1.8em;
+    }
+    
+    .likert-option {
+        padding: 12px 6px;
+    }
+    
+    .option-color {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .option-text {
+        font-size: 0.7em;
+    }
+    
+    .scale-container {
+        padding: 25px 15px 35px;
+    }
+}
+
+/* Prevent text selection during sliding */
+.likert-scale {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    -webkit-tap-highlight-color: transparent;
+}

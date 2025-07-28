@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>SLIK - Reinventing Likert Scales</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div id="app">
+        <div class="slide">
+            <div class="header">
+                <button id="backBtn">←</button>
+                <div class="progress">Item <span id="currentItem">1</span> of <span id="totalItems">10</span></div>
+            </div>
+            
+            <div class="question-container">
+                <h2 id="question">I enjoy statistics</h2>
+                <div class="question-number">#1</div>
+            </div>
+            
+            <div class="response-display">
+                <div class="response-text" id="responseText">Tap or slide to respond</div>
+                <div class="response-indicator" id="responseIndicator"></div>
+            </div>
+        </div>
+        
+        <div class="scale-container">
+            <div class="likert-scale" id="likertScale">
+                <div class="likert-option" data-value="1">
+                    <div class="option-color"></div>
+                    <div class="option-text">Strongly Disagree</div>
+                </div>
+                <div class="likert-option" data-value="2">
+                    <div class="option-color"></div>
+                    <div class="option-text">Disagree</div>
+                </div>
+                <div class="likert-option" data-value="3">
+                    <div class="option-color"></div>
+                    <div class="option-text">Neutral</div>
+                </div>
+                <div class="likert-option" data-value="4">
+                    <div class="option-color"></div>
+                    <div class="option-text">Agree</div>
+                </div>
+                <div class="likert-option" data-value="5">
+                    <div class="option-color"></div>
+                    <div class="option-text">Strongly Agree</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
