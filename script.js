@@ -238,13 +238,11 @@ function toggleCheckBox(cardIndex, undo = false) {
         icon.style.display = 'none';
         delete responses[cardIndex];
         indicator.classList.remove('show');
-        card.style.borderColor = '';
     } else {
         box.classList.add('checked');
         icon.style.display = 'block';
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
-        card.style.borderColor = '#4CAF50';
     }
     
     updateSwipeHints();
@@ -257,18 +255,11 @@ function selectYesNo(cardIndex, value) {
     const noBtn = card.querySelector('.no');
     const indicator = card.querySelector('.response-indicator');
     
-    // Reset both buttons completely
+    // Reset both buttons completely to default state
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
-    yesBtn.style.background = '';
-    yesBtn.style.color = '';
-    yesBtn.style.borderColor = '';
-    noBtn.style.background = '';
-    noBtn.style.color = '';
-    noBtn.style.borderColor = '';
     
     card.classList.remove('swiping-left', 'swiping-right', 'swiping-center');
-    card.style.borderColor = '';
     
     if (!value) {
         delete responses[cardIndex];
@@ -277,11 +268,9 @@ function selectYesNo(cardIndex, value) {
         if (value === 'yes') {
             yesBtn.classList.add('selected');
             responses[cardIndex] = 'yes';
-            card.style.borderColor = '#0074D9';
         } else {
             noBtn.classList.add('selected');
             responses[cardIndex] = 'no';
-            card.style.borderColor = '#ff9500';
         }
         indicator.classList.add('show');
     }
