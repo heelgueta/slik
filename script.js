@@ -179,10 +179,10 @@ function setupCardInteractions() {
             const cardIndex = parseInt(btn.dataset.card);
             const value = btn.dataset.value;
             if (responses[cardIndex] === value) {
-                // Undo the selection
+                // Undo the selection - clicking the same button that's already selected
                 selectYesNo(cardIndex, null);
             } else {
-                // Select the option
+                // Select the option - clicking a different button or no button is selected
                 selectYesNo(cardIndex, value);
                 setTimeout(() => nextCard(), 350);
             }
@@ -203,8 +203,8 @@ function showCurrentCard() {
             // Reset button states to match current response
             const currentCard = cardConfig[currentCardIndex];
             if (currentCard.type === 'yesno') {
-                const yesBtn = card.querySelector('.yes');
-                const noBtn = card.querySelector('.no');
+                const yesBtn = card.querySelector('.yes-no-btn.yes');
+                const noBtn = card.querySelector('.yes-no-btn.no');
                 if (yesBtn && noBtn) {
                     yesBtn.classList.remove('selected');
                     noBtn.classList.remove('selected');
@@ -268,12 +268,14 @@ function toggleCheckBox(cardIndex, undo = false) {
 
 function selectYesNo(cardIndex, value) {
     const card = document.querySelector(`[data-index="${cardIndex}"]`);
-    const yesBtn = card.querySelector('.yes');
-    const noBtn = card.querySelector('.no');
+    const yesBtn = card.querySelector('.yes-no-btn.yes');
+    const noBtn = card.querySelector('.yes-no-btn.no');
     const indicator = card.querySelector('.response-indicator');
     
     console.log(`selectYesNo called with cardIndex: ${cardIndex}, value: ${value}`);
     console.log(`Current responses[${cardIndex}]:`, responses[cardIndex]);
+    console.log(`Found yesBtn:`, yesBtn);
+    console.log(`Found noBtn:`, noBtn);
     
     // Reset both buttons completely to default state
     yesBtn.classList.remove('selected');
@@ -288,6 +290,24 @@ function selectYesNo(cardIndex, value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
         console.log(`Unselected - responses[${cardIndex}]:`, responses[cardIndex]);
+        
+        // Temporarily disable transitions to force immediate style change
+        const originalYesTransition = yesBtn.style.transition;
+        const originalNoTransition = noBtn.style.transition;
+        
+        yesBtn.style.transition = 'none';
+        noBtn.style.transition = 'none';
+        
+        // Force a reflow
+        yesBtn.offsetHeight;
+        noBtn.offsetHeight;
+        
+        // Restore transitions
+        setTimeout(() => {
+            yesBtn.style.transition = originalYesTransition;
+            noBtn.style.transition = originalNoTransition;
+        }, 10);
+        
     } else {
         if (value === 'yes') {
             yesBtn.classList.add('selected');

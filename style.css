@@ -255,25 +255,27 @@ body, html {
 .yes-no-btn.yes {
     border-color: #0074D9;
     color: #0074D9;
+    background: #fff;
 }
 
 .yes-no-btn.yes:hover,
 .yes-no-btn.yes.selected {
-    background: #0074D9;
-    color: #fff;
-    border-color: #0074D9;
+    background: #0074D9 !important;
+    color: #fff !important;
+    border-color: #0074D9 !important;
 }
 
 .yes-no-btn.no {
     border-color: #ff9500;
     color: #ff9500;
+    background: #fff;
 }
 
 .yes-no-btn.no:hover,
 .yes-no-btn.no.selected {
-    background: #ff9500;
-    color: #fff;
-    border-color: #ff9500;
+    background: #ff9500 !important;
+    color: #fff !important;
+    border-color: #ff9500 !important;
 }
 
 .response-indicator {
