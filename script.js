@@ -89,6 +89,8 @@ let responses = {};
 let gesture = { startY: null, startX: null, currentY: null, currentX: null };
 let isSwiping = false;
 let isCompleted = false;
+let swipeHintInterval = null;
+let swipeHintTimers = [];
 
 // Initialize
 function init() {
@@ -154,7 +156,13 @@ function setupCardInteractions() {
     document.querySelectorAll('.check-box').forEach((box, index) => {
         box.addEventListener('click', (e) => {
             e.stopPropagation();
-            toggleCheckBox(index);
+            // Undo if already checked, else check and auto-advance
+            if (responses[index]) {
+                toggleCheckBox(index, true); // true = undo
+            } else {
+                toggleCheckBox(index, false);
+                setTimeout(() => nextCard(), 350);
+            }
         });
     });
     
@@ -164,7 +172,13 @@ function setupCardInteractions() {
             e.stopPropagation();
             const cardIndex = parseInt(btn.dataset.card);
             const value = btn.dataset.value;
-            selectYesNo(cardIndex, value);
+            // Undo if already selected, else select and auto-advance
+            if (responses[cardIndex] === value) {
+                selectYesNo(cardIndex, null); // undo
+            } else {
+                selectYesNo(cardIndex, value);
+                setTimeout(() => nextCard(), 350);
+            }
         });
     });
 }
@@ -194,39 +208,36 @@ function showResponseIndicator(cardIndex) {
     
     if (indicator && responses[cardIndex]) {
         indicator.classList.add('show');
-        
         if (card.type === 'check') {
             indicator.className = 'response-indicator check show';
+            indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="black"/><path d="M8 14.5L12 18.5L20 10.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         } else if (card.type === 'yesno') {
             const response = responses[cardIndex];
             indicator.className = `response-indicator ${response} show`;
+            indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="black"/><path d="M8 14.5L12 18.5L20 10.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         }
     } else if (indicator) {
         indicator.classList.remove('show');
+        indicator.innerHTML = '✓';
     }
 }
 
-function toggleCheckBox(cardIndex) {
+function toggleCheckBox(cardIndex, undo = false) {
     const box = document.getElementById(`checkBox${cardIndex}`);
     const icon = document.getElementById(`checkIcon${cardIndex}`);
     const indicator = document.getElementById(`responseIndicator${cardIndex}`);
-    
-    if (responses[cardIndex]) {
-        // Uncheck
+    if (undo) {
         box.classList.remove('checked');
         icon.textContent = '☐';
         delete responses[cardIndex];
         indicator.classList.remove('show');
     } else {
-        // Check
         box.classList.add('checked');
         icon.textContent = '☑';
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
     }
-    
     updateSwipeHints();
-    console.log(`Check response for card ${cardIndex}:`, responses[cardIndex]);
 }
 
 function selectYesNo(cardIndex, value) {
@@ -234,103 +245,105 @@ function selectYesNo(cardIndex, value) {
     const yesBtn = card.querySelector('.yes');
     const noBtn = card.querySelector('.no');
     const indicator = document.getElementById(`responseIndicator${cardIndex}`);
-    
-    // Update button states
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
-    
-    if (value === 'yes') {
-        yesBtn.classList.add('selected');
-        responses[cardIndex] = 'yes';
+    if (!value) {
+        delete responses[cardIndex];
+        indicator.classList.remove('show');
     } else {
-        noBtn.classList.add('selected');
-        responses[cardIndex] = 'no';
+        if (value === 'yes') {
+            yesBtn.classList.add('selected');
+            responses[cardIndex] = 'yes';
+        } else {
+            noBtn.classList.add('selected');
+            responses[cardIndex] = 'no';
+        }
+        indicator.classList.add('show');
     }
-    
-    // Show indicator
-    indicator.classList.add('show');
-    indicator.className = `response-indicator ${value} show`;
-    
     updateSwipeHints();
-    console.log(`Yes/No response for card ${cardIndex}:`, value);
 }
 
 function updateSwipeHints() {
+    // Clear previous timers
+    swipeHintTimers.forEach(clearTimeout);
+    swipeHintTimers = [];
+    if (swipeHintInterval) clearInterval(swipeHintInterval);
+    // Animated cycling hints
     cardConfig.forEach((card, index) => {
         const hint = document.getElementById(`swipeHint${index}`);
         if (!hint) return;
-        
-        let hintText = '';
-        
+        let hints = [];
         if (index === 0) {
-            hintText = 'Swipe up to continue';
+            hints = ['Swipe up to continue', 'Swipe down to go back'];
         } else if (index === cardConfig.length - 1) {
-            hintText = 'Swipe down to go back';
+            hints = ['Swipe down to go back', 'Swipe up to finish'];
         } else {
             if (card.type === 'yesno') {
                 if (responses[index]) {
-                    hintText = 'Swipe up to continue | Swipe down to go back';
+                    hints = ['Swipe up to continue', 'Swipe down to go back'];
                 } else {
-                    hintText = 'Swipe left for NO | Swipe right for YES | Swipe up to skip';
+                    hints = ['Swipe left for NO', 'Swipe right for YES', 'Swipe up to skip'];
                 }
             } else if (card.type === 'check') {
                 if (responses[index]) {
-                    hintText = 'Swipe up to continue | Swipe down to go back';
+                    hints = ['Swipe up to continue', 'Swipe down to go back'];
                 } else {
-                    hintText = 'Swipe up to skip | Swipe down to go back';
+                    hints = ['Swipe up to skip', 'Swipe down to go back'];
                 }
             } else {
-                hintText = 'Swipe up to continue | Swipe down to go back';
+                hints = ['Swipe up to continue', 'Swipe down to go back'];
             }
         }
-        
-        hint.textContent = hintText;
+        let i = 0;
+        function showHint() {
+            hint.style.opacity = 0;
+            swipeHintTimers.push(setTimeout(() => {
+                hint.textContent = hints[i];
+                hint.style.opacity = 1;
+                i = (i + 1) % hints.length;
+            }, 350));
+        }
+        showHint();
+        swipeHintInterval = setInterval(() => {
+            hint.style.opacity = 0;
+            swipeHintTimers.push(setTimeout(() => {
+                hint.textContent = hints[i];
+                hint.style.opacity = 1;
+                i = (i + 1) % hints.length;
+            }, 350));
+        }, 2500);
     });
 }
 
 function setupSwipeGestures() {
     cardContainerEl.addEventListener('touchstart', (e) => {
         if (isCompleted) return;
-        
-        // Don't start swipe if clicking on interactive elements
         if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
             return;
         }
-        
         gesture.startY = e.touches[0].clientY;
         gesture.startX = e.touches[0].clientX;
         isSwiping = true;
     });
-    
     cardContainerEl.addEventListener('mousedown', (e) => {
         if (isCompleted) return;
-        
-        // Don't start swipe if clicking on interactive elements
         if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
             return;
         }
-        
         gesture.startY = e.clientY;
         gesture.startX = e.clientX;
         isSwiping = true;
     });
-    
     cardContainerEl.addEventListener('touchmove', (e) => {
         if (!isSwiping || isCompleted) return;
         e.preventDefault();
-        
         gesture.currentY = e.touches[0].clientY;
         gesture.currentX = e.touches[0].clientX;
-        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
-        
         const activeCard = document.querySelector('.card.active');
         if (!activeCard) return;
-        
-        // Determine swipe direction
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            // Vertical swipe
             if (deltaY > 20) {
                 activeCard.classList.add('swiping-down');
                 activeCard.classList.remove('swiping-up');
@@ -339,7 +352,6 @@ function setupSwipeGestures() {
                 activeCard.classList.remove('swiping-down');
             }
         } else {
-            // Horizontal swipe (for yes/no cards)
             const currentCard = cardConfig[currentCardIndex];
             if (currentCard.type === 'yesno') {
                 if (deltaX > 20) {
@@ -352,23 +364,16 @@ function setupSwipeGestures() {
             }
         }
     });
-    
     cardContainerEl.addEventListener('mousemove', (e) => {
         if (!isSwiping || isCompleted) return;
         e.preventDefault();
-        
         gesture.currentY = e.clientY;
         gesture.currentX = e.clientX;
-        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
-        
         const activeCard = document.querySelector('.card.active');
         if (!activeCard) return;
-        
-        // Determine swipe direction
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            // Vertical swipe
             if (deltaY > 20) {
                 activeCard.classList.add('swiping-down');
                 activeCard.classList.remove('swiping-up');
@@ -377,7 +382,6 @@ function setupSwipeGestures() {
                 activeCard.classList.remove('swiping-down');
             }
         } else {
-            // Horizontal swipe (for yes/no cards)
             const currentCard = cardConfig[currentCardIndex];
             if (currentCard.type === 'yesno') {
                 if (deltaX > 20) {
@@ -390,74 +394,71 @@ function setupSwipeGestures() {
             }
         }
     });
-    
     cardContainerEl.addEventListener('touchend', (e) => {
         if (!isSwiping || isCompleted) return;
-        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
-        
         const activeCard = document.querySelector('.card.active');
         if (activeCard) {
             activeCard.classList.remove('swiping-up', 'swiping-down', 'swiping-left', 'swiping-right');
         }
-        
-        // Handle navigation
         if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
             if (deltaY > 0) {
-                // Swipe down - go back
                 previousCard();
             } else {
-                // Swipe up - go forward
-                nextCard();
+                // Swipe up - go forward or auto-advance if responded
+                const card = cardConfig[currentCardIndex];
+                if ((card.type === 'check' && responses[currentCardIndex]) || (card.type === 'yesno' && responses[currentCardIndex])) {
+                    setTimeout(() => nextCard(), 150);
+                } else {
+                    nextCard();
+                }
             }
         } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
-            // Handle yes/no swipe
             const currentCard = cardConfig[currentCardIndex];
             if (currentCard.type === 'yesno') {
                 if (deltaX > 0) {
-                    selectYesNo(currentCardIndex, 'yes');
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
+                    setTimeout(() => nextCard(), 350);
                 } else {
-                    selectYesNo(currentCardIndex, 'no');
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
+                    setTimeout(() => nextCard(), 350);
                 }
             }
         }
-        
         isSwiping = false;
     });
-    
     cardContainerEl.addEventListener('mouseup', (e) => {
         if (!isSwiping || isCompleted) return;
-        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
-        
         const activeCard = document.querySelector('.card.active');
         if (activeCard) {
             activeCard.classList.remove('swiping-up', 'swiping-down', 'swiping-left', 'swiping-right');
         }
-        
-        // Handle navigation
         if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
             if (deltaY > 0) {
-                // Swipe down - go back
                 previousCard();
             } else {
-                // Swipe up - go forward
-                nextCard();
+                const card = cardConfig[currentCardIndex];
+                if ((card.type === 'check' && responses[currentCardIndex]) || (card.type === 'yesno' && responses[currentCardIndex])) {
+                    setTimeout(() => nextCard(), 150);
+                } else {
+                    nextCard();
+                }
             }
         } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
-            // Handle yes/no swipe
             const currentCard = cardConfig[currentCardIndex];
             if (currentCard.type === 'yesno') {
                 if (deltaX > 0) {
-                    selectYesNo(currentCardIndex, 'yes');
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
+                    setTimeout(() => nextCard(), 350);
                 } else {
-                    selectYesNo(currentCardIndex, 'no');
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
+                    setTimeout(() => nextCard(), 350);
                 }
             }
         }
-        
         isSwiping = false;
     });
 }
@@ -569,3 +570,4 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize
 init();
+

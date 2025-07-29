@@ -12,7 +12,6 @@ body, html {
     color: #000;
     overflow: hidden;
     position: fixed;
-    /* Prevent pull-to-refresh */
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
 }
@@ -22,12 +21,10 @@ body, html {
     display: flex;
     flex-direction: column;
     position: relative;
-    /* Account for system UI bars */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* TOP BAR */
 .top-bar {
     background: #fff;
     padding: 15px 20px 10px;
@@ -58,7 +55,6 @@ body, html {
     transition: width 0.3s ease;
 }
 
-/* CARD CONTAINER */
 .card-container {
     flex: 1;
     position: relative;
@@ -66,7 +62,6 @@ body, html {
     background: #f8f9fa;
 }
 
-/* CARD BASE STYLES */
 .card {
     position: absolute;
     top: 0;
@@ -76,7 +71,7 @@ body, html {
     background: #fff;
     margin: 20px;
     border-radius: 20px;
-    padding: 40px 30px;
+    padding: 40px 30px 40px 30px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -88,21 +83,25 @@ body, html {
     border: 1px solid #e0e0e0;
     cursor: pointer;
     user-select: none;
+    max-height: calc(100vh - 40px - env(safe-area-inset-bottom));
+    box-sizing: border-box;
 }
 
 .card.active {
     transform: translateY(0);
+    z-index: 2;
 }
 
 .card.previous {
-    transform: translateY(-20%);
-    opacity: 0.3;
-    pointer-events: none;
+    /* No transparency, just out of view */
+    transform: translateY(-100%);
+    z-index: 1;
 }
 
 .card.next {
     transform: translateY(100%);
     opacity: 0;
+    z-index: 1;
 }
 
 .card.swiping-up {
@@ -125,7 +124,6 @@ body, html {
     opacity: 0.7;
 }
 
-/* CARD CONTENT */
 .card-presentation {
     font-size: 0.9em;
     color: #666;
@@ -152,7 +150,6 @@ body, html {
     max-width: 90%;
 }
 
-/* TEXT CARD - Full black background */
 .text-card {
     background: #000;
     color: #fff;
@@ -171,7 +168,6 @@ body, html {
     color: rgba(255, 255, 255, 0.9);
 }
 
-/* CHECK CARD */
 .check-card {
     background: #fff;
 }
@@ -181,7 +177,7 @@ body, html {
     height: 80px;
     border: 3px solid #e0e0e0;
     border-radius: 15px;
-    margin: 20px 0;
+    margin: 20px 0 40px 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -193,18 +189,17 @@ body, html {
 }
 
 .check-box:hover {
-    border-color: #667eea;
+    border-color: #0074D9;
     transform: scale(1.05);
 }
 
 .check-box.checked {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-color: #667eea;
+    background: #0074D9;
+    border-color: #0074D9;
     color: #fff;
     transform: scale(1.1);
 }
 
-/* YES/NO CARD */
 .yes-no-card {
     background: #fff;
 }
@@ -236,9 +231,8 @@ body, html {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* Colorblind-friendly color scheme */
 .yes-no-btn.yes {
-    border-color: #2E8B57; /* Sea Green - more distinct */
+    border-color: #2E8B57;
     color: #2E8B57;
 }
 
@@ -250,7 +244,7 @@ body, html {
 }
 
 .yes-no-btn.no {
-    border-color: #DC143C; /* Crimson - more distinct */
+    border-color: #DC143C;
     color: #DC143C;
 }
 
@@ -261,12 +255,12 @@ body, html {
     border-color: #DC143C;
 }
 
-/* RESPONSE INDICATORS - Centered on card */
+/* RESPONSE INDICATORS - Top center, always black for check */
 .response-indicator {
     position: absolute;
-    top: 50%;
+    top: 18px;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0);
     width: 50px;
     height: 50px;
     border-radius: 50%;
@@ -285,7 +279,7 @@ body, html {
 }
 
 .response-indicator.check {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: #0074D9;
     color: #fff;
 }
 
@@ -299,7 +293,11 @@ body, html {
     color: #fff;
 }
 
-/* SWIPE HINTS */
+.response-indicator.check {
+    background: #0074D9 !important;
+    color: #fff !important;
+}
+
 .swipe-hint {
     position: absolute;
     bottom: 30px;
@@ -310,6 +308,8 @@ body, html {
     opacity: 0.7;
     text-align: center;
     animation: pulse 2s infinite;
+    min-width: 180px;
+    min-height: 1.5em;
 }
 
 @keyframes pulse {
@@ -317,7 +317,6 @@ body, html {
     50% { opacity: 1; }
 }
 
-/* Responsive Design */
 @media (min-width: 768px) {
     .card {
         max-width: 500px;
@@ -325,29 +324,23 @@ body, html {
         left: 50%;
         transform: translateX(-50%) translateY(100%);
     }
-    
     .card.active {
         transform: translateX(-50%) translateY(0);
     }
-    
     .card.previous {
-        transform: translateX(-50%) translateY(-20%);
+        transform: translateX(-50%) translateY(-100%);
     }
-    
     .card.next {
         transform: translateX(-50%) translateY(100%);
     }
-    
     .card.swiping-up {
         transform: translateX(-50%) translateY(-100%);
     }
-    
     .card.swiping-down {
         transform: translateX(-50%) translateY(20%);
     }
 }
 
-/* Prevent text selection */
 * {
     -webkit-tap-highlight-color: transparent;
     -webkit-user-select: none;
@@ -356,7 +349,6 @@ body, html {
     user-select: none;
 }
 
-/* Smooth transitions */
 * {
     transition: all 0.3s ease;
 }
