@@ -199,6 +199,23 @@ function showCurrentCard() {
         if (index === currentCardIndex) {
             card.classList.add('active');
             showResponseIndicator(index);
+            
+            // Reset button states to match current response
+            const currentCard = cardConfig[currentCardIndex];
+            if (currentCard.type === 'yesno') {
+                const yesBtn = card.querySelector('.yes');
+                const noBtn = card.querySelector('.no');
+                if (yesBtn && noBtn) {
+                    yesBtn.classList.remove('selected');
+                    noBtn.classList.remove('selected');
+                    
+                    if (responses[currentCardIndex] === 'yes') {
+                        yesBtn.classList.add('selected');
+                    } else if (responses[currentCardIndex] === 'no') {
+                        noBtn.classList.add('selected');
+                    }
+                }
+            }
         } else if (index < currentCardIndex) {
             card.classList.add('previous');
         } else {
