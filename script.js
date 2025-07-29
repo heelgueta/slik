@@ -126,7 +126,7 @@ function createCards() {
         if (card.type === 'check') {
             cardHTML += `
                 <div class="check-box" id="checkBox${index}">
-                    <span class="check-x" id="checkIcon${index}">×</span>
+                    <span class="check-tick" id="checkIcon${index}" style="display: none;">✓</span>
                 </div>
                 <div class="response-indicator check" id="responseIndicator${index}">✓</div>
             `;
@@ -226,14 +226,12 @@ function toggleCheckBox(cardIndex, undo = false) {
     
     if (undo) {
         box.classList.remove('checked');
-        icon.className = 'check-x';
-        icon.textContent = '×';
+        icon.style.display = 'none';
         delete responses[cardIndex];
         indicator.classList.remove('show');
     } else {
         box.classList.add('checked');
-        icon.className = 'check-tick';
-        icon.textContent = '✓';
+        icon.style.display = 'block';
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
     }
@@ -340,26 +338,28 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            // Vertical swipe
-            if (deltaY > 30) {
-                activeCard.classList.add('swiping-down');
-                activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
-            } else if (deltaY < -30) {
-                activeCard.classList.add('swiping-up');
-                activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
-            }
-        } else if (currentCard.type === 'yesno') {
-            // Horizontal swipe for yes/no cards
+        // For yes/no cards, prioritize horizontal swiping
+        if (currentCard.type === 'yesno') {
             if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
-                activeCard.classList.remove('swiping-left', 'swiping-right');
+                activeCard.classList.remove('swiping-left', 'swiping-right', 'swiping-up', 'swiping-down');
             } else if (deltaX > 50) {
                 activeCard.classList.add('swiping-right');
-                activeCard.classList.remove('swiping-left', 'swiping-center');
+                activeCard.classList.remove('swiping-left', 'swiping-center', 'swiping-up', 'swiping-down');
             } else if (deltaX < -50) {
                 activeCard.classList.add('swiping-left');
-                activeCard.classList.remove('swiping-right', 'swiping-center');
+                activeCard.classList.remove('swiping-right', 'swiping-center', 'swiping-up', 'swiping-down');
+            }
+        } else {
+            // For other cards, only vertical swiping
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                if (deltaY > 30) {
+                    activeCard.classList.add('swiping-down');
+                    activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
+                } else if (deltaY < -30) {
+                    activeCard.classList.add('swiping-up');
+                    activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
+                }
             }
         }
     });
@@ -379,26 +379,28 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            // Vertical swipe
-            if (deltaY > 30) {
-                activeCard.classList.add('swiping-down');
-                activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
-            } else if (deltaY < -30) {
-                activeCard.classList.add('swiping-up');
-                activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
-            }
-        } else if (currentCard.type === 'yesno') {
-            // Horizontal swipe for yes/no cards
+        // For yes/no cards, prioritize horizontal swiping
+        if (currentCard.type === 'yesno') {
             if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
-                activeCard.classList.remove('swiping-left', 'swiping-right');
+                activeCard.classList.remove('swiping-left', 'swiping-right', 'swiping-up', 'swiping-down');
             } else if (deltaX > 50) {
                 activeCard.classList.add('swiping-right');
-                activeCard.classList.remove('swiping-left', 'swiping-center');
+                activeCard.classList.remove('swiping-left', 'swiping-center', 'swiping-up', 'swiping-down');
             } else if (deltaX < -50) {
                 activeCard.classList.add('swiping-left');
-                activeCard.classList.remove('swiping-right', 'swiping-center');
+                activeCard.classList.remove('swiping-right', 'swiping-center', 'swiping-up', 'swiping-down');
+            }
+        } else {
+            // For other cards, only vertical swiping
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                if (deltaY > 30) {
+                    activeCard.classList.add('swiping-down');
+                    activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
+                } else if (deltaY < -30) {
+                    activeCard.classList.add('swiping-up');
+                    activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
+                }
             }
         }
     });
@@ -417,29 +419,32 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
-        // Handle navigation with increased thresholds
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
-            if (deltaY > 0) {
-                // Swipe down - go back
-                previousCard();
-            } else {
-                // Swipe up - go forward or auto-advance if responded
-                if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
-                    setTimeout(() => nextCard(), 150);
-                } else {
-                    nextCard();
+        // Handle navigation based on card type
+        if (currentCard.type === 'yesno') {
+            // Only horizontal swiping for yes/no cards
+            if (Math.abs(deltaX) > 100) {
+                if (deltaX > 50) {
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
+                    setTimeout(() => nextCard(), 350);
+                } else if (deltaX < -50) {
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
+                    setTimeout(() => nextCard(), 350);
                 }
             }
-        } else if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
-            // Handle yes/no swipe with increased threshold
-            if (Math.abs(deltaX) < 50) {
-                // Center anchor, do nothing
-            } else if (deltaX > 50) {
-                selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
-                setTimeout(() => nextCard(), 350);
-            } else if (deltaX < -50) {
-                selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
-                setTimeout(() => nextCard(), 350);
+        } else {
+            // Only vertical swiping for other cards
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
+                if (deltaY > 0) {
+                    // Swipe down - go back
+                    previousCard();
+                } else {
+                    // Swipe up - go forward or auto-advance if responded
+                    if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
+                        setTimeout(() => nextCard(), 150);
+                    } else {
+                        nextCard();
+                    }
+                }
             }
         }
         
@@ -460,29 +465,32 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
-        // Handle navigation with increased thresholds
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
-            if (deltaY > 0) {
-                // Swipe down - go back
-                previousCard();
-            } else {
-                // Swipe up - go forward or auto-advance if responded
-                if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
-                    setTimeout(() => nextCard(), 150);
-                } else {
-                    nextCard();
+        // Handle navigation based on card type
+        if (currentCard.type === 'yesno') {
+            // Only horizontal swiping for yes/no cards
+            if (Math.abs(deltaX) > 100) {
+                if (deltaX > 50) {
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
+                    setTimeout(() => nextCard(), 350);
+                } else if (deltaX < -50) {
+                    selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
+                    setTimeout(() => nextCard(), 350);
                 }
             }
-        } else if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
-            // Handle yes/no swipe with increased threshold
-            if (Math.abs(deltaX) < 50) {
-                // Center anchor, do nothing
-            } else if (deltaX > 50) {
-                selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
-                setTimeout(() => nextCard(), 350);
-            } else if (deltaX < -50) {
-                selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
-                setTimeout(() => nextCard(), 350);
+        } else {
+            // Only vertical swiping for other cards
+            if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
+                if (deltaY > 0) {
+                    // Swipe down - go back
+                    previousCard();
+                } else {
+                    // Swipe up - go forward or auto-advance if responded
+                    if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
+                        setTimeout(() => nextCard(), 150);
+                    } else {
+                        nextCard();
+                    }
+                }
             }
         }
         
