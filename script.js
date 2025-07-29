@@ -272,28 +272,37 @@ function selectYesNo(cardIndex, value) {
     const noBtn = card.querySelector('.no');
     const indicator = card.querySelector('.response-indicator');
     
+    console.log(`selectYesNo called with cardIndex: ${cardIndex}, value: ${value}`);
+    console.log(`Current responses[${cardIndex}]:`, responses[cardIndex]);
+    
     // Reset both buttons completely to default state
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
+    
+    console.log(`After removing selected classes - yesBtn.selected:`, yesBtn.classList.contains('selected'));
+    console.log(`After removing selected classes - noBtn.selected:`, noBtn.classList.contains('selected'));
     
     card.classList.remove('swiping-left', 'swiping-right', 'swiping-center');
     
     if (!value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
+        console.log(`Unselected - responses[${cardIndex}]:`, responses[cardIndex]);
     } else {
         if (value === 'yes') {
             yesBtn.classList.add('selected');
             responses[cardIndex] = 'yes';
+            console.log(`Selected YES - yesBtn.selected:`, yesBtn.classList.contains('selected'));
         } else {
             noBtn.classList.add('selected');
             responses[cardIndex] = 'no';
+            console.log(`Selected NO - noBtn.selected:`, noBtn.classList.contains('selected'));
         }
         indicator.classList.add('show');
     }
     
     updateSwipeHints();
-    console.log(`Yes/No response for card ${cardIndex}:`, value);
+    console.log(`Final responses[${cardIndex}]:`, responses[cardIndex]);
 }
 
 function updateSwipeHints() {
