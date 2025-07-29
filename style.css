@@ -152,10 +152,15 @@ body, html {
     max-width: 90%;
 }
 
-/* TEXT CARD */
+/* TEXT CARD - Full black background */
 .text-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #000;
     color: #fff;
+    border: none;
+}
+
+.text-card .card-presentation {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .text-card .card-main-text {
@@ -184,6 +189,7 @@ body, html {
     cursor: pointer;
     transition: all 0.3s ease;
     background: #fff;
+    position: relative;
 }
 
 .check-box:hover {
@@ -230,44 +236,48 @@ body, html {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
+/* Colorblind-friendly color scheme */
 .yes-no-btn.yes {
-    border-color: #4CAF50;
-    color: #4CAF50;
+    border-color: #2E8B57; /* Sea Green - more distinct */
+    color: #2E8B57;
 }
 
 .yes-no-btn.yes:hover,
 .yes-no-btn.yes.selected {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #2E8B57, #228B22);
     color: #fff;
-    border-color: #4CAF50;
+    border-color: #2E8B57;
 }
 
 .yes-no-btn.no {
-    border-color: #f44336;
-    color: #f44336;
+    border-color: #DC143C; /* Crimson - more distinct */
+    color: #DC143C;
 }
 
 .yes-no-btn.no:hover,
 .yes-no-btn.no.selected {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
+    background: linear-gradient(135deg, #DC143C, #B22222);
     color: #fff;
-    border-color: #f44336;
+    border-color: #DC143C;
 }
 
-/* RESPONSE INDICATORS */
+/* RESPONSE INDICATORS - Centered on card */
 .response-indicator {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2em;
+    font-size: 1.5em;
     opacity: 0;
     transition: opacity 0.3s ease;
+    z-index: 10;
+    pointer-events: none;
 }
 
 .response-indicator.show {
@@ -280,12 +290,12 @@ body, html {
 }
 
 .response-indicator.yes {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #2E8B57, #228B22);
     color: #fff;
 }
 
 .response-indicator.no {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
+    background: linear-gradient(135deg, #DC143C, #B22222);
     color: #fff;
 }
 
@@ -299,13 +309,6 @@ body, html {
     color: #999;
     opacity: 0.7;
     text-align: center;
-}
-
-.swipe-hint.up {
-    animation: pulse 2s infinite;
-}
-
-.swipe-hint.down {
     animation: pulse 2s infinite;
 }
 
