@@ -1,209 +1,184 @@
-// Survey Configuration
-const surveyConfig = {
-    sections: [
-        {
-            id: 1,
-            title: "Attitudes Toward Statistics",
-            description: "Let's explore your feelings about statistics and data analysis.",
-            type: "likert",
-            items: [
-                "I enjoy learning about statistics",
-                "Statistical analysis is fascinating to me",
-                "I find data visualization appealing",
-                "Probability concepts are intuitive",
-                "I like working with numbers and data"
-            ]
-        },
-        {
-            id: 2,
-            title: "Statistical Confidence",
-            description: "How confident do you feel about various statistical concepts?",
-            type: "likert",
-            items: [
-                "I feel confident interpreting charts",
-                "Statistical software is user-friendly",
-                "I understand correlation vs causation",
-                "Statistical significance makes sense",
-                "I can spot misleading statistics"
-            ]
-        },
-        {
-            id: 3,
-            title: "Data Analysis Preferences",
-            description: "Quick preferences about data analysis approaches.",
-            type: "yesno",
-            items: [
-                "I prefer visual data over tables",
-                "I enjoy hypothesis testing",
-                "Regression analysis is clear to me",
-                "I like exploring datasets",
-                "Confidence intervals are intuitive"
-            ]
-        },
-        {
-            id: 4,
-            title: "Statistical Concepts",
-            description: "Rate your understanding of these concepts.",
-            type: "semantic",
-            items: [
-                {
-                    question: "Correlation vs Causation",
-                    leftLabel: "Confusing",
-                    rightLabel: "Clear"
-                },
-                {
-                    question: "P-values",
-                    leftLabel: "Mysterious",
-                    rightLabel: "Intuitive"
-                },
-                {
-                    question: "Confidence Intervals",
-                    leftLabel: "Uncertain",
-                    rightLabel: "Confident"
-                },
-                {
-                    question: "Statistical Power",
-                    leftLabel: "Weak",
-                    rightLabel: "Strong"
-                },
-                {
-                    question: "Effect Size",
-                    leftLabel: "Small",
-                    rightLabel: "Large"
-                }
-            ]
-        }
-    ]
-};
+// Card Configuration
+const cardConfig = [
+    // Text Cards (2)
+    {
+        id: 1,
+        type: 'text',
+        presentation: 'Welcome',
+        mainText: 'Welcome to SLIK Survey',
+        description: 'This is a prototype of our new card-based survey system. Swipe up or down to navigate between cards.'
+    },
+    {
+        id: 2,
+        type: 'text',
+        presentation: 'Instructions',
+        mainText: 'How to Use',
+        description: '• Swipe up/down to navigate\n• Tap checkboxes to verify\n• Swipe left/right for yes/no\n• Your responses are saved automatically'
+    },
+    
+    // Check Cards (2)
+    {
+        id: 3,
+        type: 'check',
+        presentation: 'Verification',
+        mainText: 'I have read the instructions',
+        description: 'Please check this box to confirm you understand how to use this survey.'
+    },
+    {
+        id: 4,
+        type: 'check',
+        presentation: 'Consent',
+        mainText: 'I agree to participate',
+        description: 'By checking this box, you consent to participate in this survey.'
+    },
+    
+    // Yes/No Cards (6)
+    {
+        id: 5,
+        type: 'yesno',
+        presentation: 'Attitude',
+        mainText: 'I enjoy learning about statistics',
+        description: 'Do you find statistics interesting and engaging?'
+    },
+    {
+        id: 6,
+        type: 'yesno',
+        presentation: 'Confidence',
+        mainText: 'I feel confident with data analysis',
+        description: 'Are you comfortable working with data and making analytical decisions?'
+    },
+    {
+        id: 7,
+        type: 'yesno',
+        presentation: 'Preference',
+        mainText: 'I prefer visual data over tables',
+        description: 'Do you find charts and graphs more useful than numerical tables?'
+    },
+    {
+        id: 8,
+        type: 'yesno',
+        presentation: 'Experience',
+        mainText: 'I have used statistical software',
+        description: 'Have you ever used tools like R, Python, SPSS, or Excel for analysis?'
+    },
+    {
+        id: 9,
+        type: 'yesno',
+        presentation: 'Interest',
+        mainText: 'I want to learn more about data science',
+        description: 'Are you interested in developing your data science skills further?'
+    },
+    {
+        id: 10,
+        type: 'yesno',
+        presentation: 'Application',
+        mainText: 'I use data in my daily work',
+        description: 'Do you regularly work with data in your professional or academic life?'
+    }
+];
 
 // DOM Elements
-const backBtn = document.getElementById('backBtn');
-const themeBtn = document.getElementById('themeBtn');
-const currentSectionEl = document.getElementById('currentSection');
-const totalSectionsEl = document.getElementById('totalSections');
-const currentItemEl = document.getElementById('currentItem');
-const totalItemsEl = document.getElementById('totalItems');
+const currentCardEl = document.getElementById('currentCard');
+const totalCardsEl = document.getElementById('totalCards');
 const progressFillEl = document.getElementById('progressFill');
-const contentContainerEl = document.getElementById('contentContainer');
+const cardContainerEl = document.getElementById('cardContainer');
 
 // State
-let currentSectionIndex = 0;
-let currentItemIndex = 0;
-let isInSection = false;
-let responses = [];
-let gesture = { type: null, startY: null, currentY: null, startX: null, currentX: null };
-let isSliding = false;
-let isSwipingCard = false;
-let currentTheme = 'dark';
+let currentCardIndex = 0;
+let responses = {};
+let gesture = { startY: null, startX: null, currentY: null, currentX: null };
+let isSwiping = false;
 
 // Initialize
 function init() {
-    totalSectionsEl.textContent = surveyConfig.sections.length;
-    showSectionIntro();
+    totalCardsEl.textContent = cardConfig.length;
+    createCards();
+    showCurrentCard();
     updateProgress();
-    setupThemeToggle();
+    setupSwipeGestures();
     preventPullToRefresh();
 }
 
-function setupThemeToggle() {
-    themeBtn.addEventListener('click', () => {
-        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        themeBtn.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+function createCards() {
+    cardContainerEl.innerHTML = '';
+    
+    cardConfig.forEach((card, index) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = `card ${card.type}-card`;
+        cardEl.dataset.index = index;
+        
+        let cardHTML = '';
+        
+        if (card.presentation) {
+            cardHTML += `<div class="card-presentation">${card.presentation}</div>`;
+        }
+        
+        cardHTML += `<div class="card-main-text">${card.mainText}</div>`;
+        
+        if (card.description) {
+            cardHTML += `<div class="card-description">${card.description}</div>`;
+        }
+        
+        // Add response elements based on card type
+        if (card.type === 'check') {
+            cardHTML += `
+                <div class="check-box" id="checkBox${index}">
+                    <span id="checkIcon${index}">☐</span>
+                </div>
+                <div class="response-indicator check" id="responseIndicator${index}">✓</div>
+            `;
+        } else if (card.type === 'yesno') {
+            cardHTML += `
+                <div class="yes-no-buttons">
+                    <button class="yes-no-btn no" data-value="no" data-card="${index}">NO</button>
+                    <button class="yes-no-btn yes" data-value="yes" data-card="${index}">YES</button>
+                </div>
+                <div class="response-indicator yes" id="responseIndicator${index}">✓</div>
+            `;
+        }
+        
+        // Add swipe hints
+        if (index === 0) {
+            cardHTML += `<div class="swipe-hint down">Swipe down to continue</div>`;
+        } else if (index === cardConfig.length - 1) {
+            cardHTML += `<div class="swipe-hint up">Swipe up to go back</div>`;
+        }
+        
+        cardEl.innerHTML = cardHTML;
+        cardContainerEl.appendChild(cardEl);
+    });
+    
+    setupCardInteractions();
+}
+
+function setupCardInteractions() {
+    // Check box interactions
+    document.querySelectorAll('.check-box').forEach((box, index) => {
+        box.addEventListener('click', () => {
+            toggleCheckBox(index);
+        });
+    });
+    
+    // Yes/No button interactions
+    document.querySelectorAll('.yes-no-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const cardIndex = parseInt(btn.dataset.card);
+            const value = btn.dataset.value;
+            selectYesNo(cardIndex, value);
+        });
     });
 }
 
-function preventPullToRefresh() {
-    // Prevent pull-to-refresh on mobile
-    document.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            gesture.startY = touch.clientY;
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 1) {
-            const touch = e.touches[0];
-            const deltaY = touch.clientY - gesture.startY;
-            
-            // Prevent pull-to-refresh
-            if (deltaY > 0 && window.scrollY === 0) {
-                e.preventDefault();
-            }
-        }
-    }, { passive: false });
-}
-
-function showSectionIntro() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    
-    contentContainerEl.innerHTML = `
-        <div class="section-intro">
-            <h2 class="section-title">${section.title}</h2>
-            <p class="section-description">${section.description}</p>
-            <button class="start-section-btn" id="startSectionBtn">Start Section</button>
-        </div>
-    `;
-    
-    document.getElementById('startSectionBtn').addEventListener('click', startSection);
-    
-    isInSection = false;
-}
-
-function startSection() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    currentItemIndex = 0;
-    
-    createCards(section);
-    showCurrentCard();
-    updateResponseInterface();
-    
-    isInSection = true;
-    updateProgress();
-}
-
-function createCards(section) {
-    contentContainerEl.innerHTML = '';
-    
-    if (section.type === 'semantic') {
-        section.items.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.dataset.index = index;
-            
-            card.innerHTML = `
-                <div class="item-number">Item ${index + 1}</div>
-                <div class="item-question">${item.question}</div>
-            `;
-            
-            contentContainerEl.appendChild(card);
-        });
-    } else {
-        section.items.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'item-card';
-            card.dataset.index = index;
-            
-            card.innerHTML = `
-                <div class="item-number">Item ${index + 1}</div>
-                <div class="item-question">${item}</div>
-            `;
-            
-            contentContainerEl.appendChild(card);
-        });
-    }
-}
-
 function showCurrentCard() {
-    const cards = document.querySelectorAll('.item-card');
+    const cards = document.querySelectorAll('.card');
     
     cards.forEach((card, index) => {
-        card.classList.remove('active', 'previous', 'next', 'swiping-up', 'swiping-down');
+        card.classList.remove('active', 'previous', 'next', 'swiping-up', 'swiping-down', 'swiping-left', 'swiping-right');
         
-        if (index === currentItemIndex) {
+        if (index === currentCardIndex) {
             card.classList.add('active');
-        } else if (index < currentItemIndex) {
+            showResponseIndicator(index);
+        } else if (index < currentCardIndex) {
             card.classList.add('previous');
         } else {
             card.classList.add('next');
@@ -211,573 +186,252 @@ function showCurrentCard() {
     });
 }
 
-function updateResponseInterface() {
-    const section = surveyConfig.sections[currentSectionIndex];
+function showResponseIndicator(cardIndex) {
+    const card = cardConfig[cardIndex];
+    const indicator = document.getElementById(`responseIndicator${cardIndex}`);
     
-    if (section.type === 'likert') {
-        createLikertResponse();
-    } else if (section.type === 'yesno') {
-        createYesNoResponse();
-    } else if (section.type === 'semantic') {
-        createSemanticResponse();
+    if (indicator && responses[cardIndex]) {
+        indicator.classList.add('show');
+        
+        if (card.type === 'check') {
+            indicator.className = 'response-indicator check show';
+        } else if (card.type === 'yesno') {
+            const response = responses[cardIndex];
+            indicator.className = `response-indicator ${response} show`;
+        }
+    } else if (indicator) {
+        indicator.classList.remove('show');
     }
 }
 
-function createLikertResponse() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
+function toggleCheckBox(cardIndex) {
+    const box = document.getElementById(`checkBox${cardIndex}`);
+    const icon = document.getElementById(`checkIcon${cardIndex}`);
+    const indicator = document.getElementById(`responseIndicator${cardIndex}`);
     
-    const responseEl = document.createElement('div');
-    responseEl.innerHTML = `
-        <div class="response-instructions">Tap or slide to indicate your agreement</div>
-        <div class="likert-scale" id="likertScale">
-            <div class="likert-option" data-value="1">
-                <div class="option-text">Strongly Disagree</div>
-            </div>
-            <div class="likert-option" data-value="2">
-                <div class="option-text">Disagree</div>
-            </div>
-            <div class="likert-option" data-value="3">
-                <div class="option-text">Neutral</div>
-            </div>
-            <div class="likert-option" data-value="4">
-                <div class="option-text">Agree</div>
-            </div>
-            <div class="likert-option" data-value="5">
-                <div class="option-text">Strongly Agree</div>
-            </div>
-        </div>
-    `;
+    if (responses[cardIndex]) {
+        // Uncheck
+        box.classList.remove('checked');
+        icon.textContent = '☐';
+        delete responses[cardIndex];
+        indicator.classList.remove('show');
+    } else {
+        // Check
+        box.classList.add('checked');
+        icon.textContent = '☑';
+        responses[cardIndex] = 'check';
+        indicator.classList.add('show');
+    }
     
-    contentContainerEl.appendChild(responseEl);
-    setupLikertInteractions();
+    console.log(`Check response for card ${cardIndex}:`, responses[cardIndex]);
 }
 
-function createYesNoResponse() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
-    
-    const responseEl = document.createElement('div');
-    responseEl.innerHTML = `
-        <div class="yes-no-card" id="yesNoCard">
-            <div class="yes-no-question">${currentItem}</div>
-            <div class="yes-no-buttons">
-                <button class="yes-no-btn no" data-value="no">NO</button>
-                <button class="yes-no-btn yes" data-value="yes">YES</button>
-            </div>
-        </div>
-    `;
-    
-    contentContainerEl.appendChild(responseEl);
-    setupYesNoInteractions();
-}
-
-function createSemanticResponse() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
-    
-    const responseEl = document.createElement('div');
-    responseEl.innerHTML = `
-        <div class="semantic-scale" id="semanticScale">
-            <div class="semantic-question">${currentItem.question}</div>
-            <div class="semantic-bar" id="semanticBar">
-                <div class="semantic-slider" id="semanticSlider"></div>
-            </div>
-            <div class="semantic-labels">
-                <div class="semantic-label left">${currentItem.leftLabel}</div>
-                <div class="semantic-label right">${currentItem.rightLabel}</div>
-            </div>
-        </div>
-    `;
-    
-    contentContainerEl.appendChild(responseEl);
-    setupSemanticInteractions();
-}
-
-function setupLikertInteractions() {
-    const scale = document.getElementById('likertScale');
-    const options = document.querySelectorAll('.likert-option');
-    
-    // Tapping
-    options.forEach(opt => {
-        opt.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            selectLikertOption(opt.dataset.value);
-        });
-    });
-    
-    // Sliding
-    scale.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        gesture.type = 'slide';
-        gesture.startX = e.touches[0].clientX;
-        isSliding = true;
-    });
-    
-    scale.addEventListener('touchmove', (e) => {
-        if (!isSliding) return;
-        e.preventDefault();
-        
-        gesture.currentX = e.touches[0].clientX;
-        const scaleRect = scale.getBoundingClientRect();
-        const relativeX = gesture.currentX - scaleRect.left;
-        const part = scaleRect.width / options.length;
-        const index = Math.floor(relativeX / part);
-        
-        if (index >= 0 && index < options.length) {
-            resetLikertOptions();
-            options[index].classList.add('selected');
-        }
-    });
-    
-    scale.addEventListener('touchend', (e) => {
-        if (isSliding && gesture.type === 'slide') {
-            const selected = document.querySelector('.likert-option.selected');
-            if (selected) {
-                selectLikertOption(selected.dataset.value);
-            }
-        }
-        isSliding = false;
-        gesture.type = null;
-    });
-    
-    // Mouse events for desktop
-    scale.addEventListener('mousedown', (e) => {
-        gesture.type = 'slide';
-        gesture.startX = e.clientX;
-        isSliding = true;
-    });
-    
-    scale.addEventListener('mousemove', (e) => {
-        if (!isSliding) return;
-        e.preventDefault();
-        
-        gesture.currentX = e.clientX;
-        const scaleRect = scale.getBoundingClientRect();
-        const relativeX = gesture.currentX - scaleRect.left;
-        const part = scaleRect.width / options.length;
-        const index = Math.floor(relativeX / part);
-        
-        if (index >= 0 && index < options.length) {
-            resetLikertOptions();
-            options[index].classList.add('selected');
-        }
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (isSliding && gesture.type === 'slide') {
-            const selected = document.querySelector('.likert-option.selected');
-            if (selected) {
-                selectLikertOption(selected.dataset.value);
-            }
-        }
-        isSliding = false;
-        gesture.type = null;
-    });
-}
-
-function setupYesNoInteractions() {
-    const card = document.getElementById('yesNoCard');
+function selectYesNo(cardIndex, value) {
+    const card = document.querySelector(`[data-index="${cardIndex}"]`);
     const yesBtn = card.querySelector('.yes');
     const noBtn = card.querySelector('.no');
+    const indicator = document.getElementById(`responseIndicator${cardIndex}`);
     
-    // Button clicks
-    yesBtn.addEventListener('click', () => selectYesNoOption('yes'));
-    noBtn.addEventListener('click', () => selectYesNoOption('no'));
+    // Update button states
+    yesBtn.classList.remove('selected');
+    noBtn.classList.remove('selected');
     
-    // Swipe gestures with improved behavior
-    let startX = 0;
-    let startY = 0;
-    let isDragging = false;
+    if (value === 'yes') {
+        yesBtn.classList.add('selected');
+        responses[cardIndex] = 'yes';
+    } else {
+        noBtn.classList.add('selected');
+        responses[cardIndex] = 'no';
+    }
     
-    card.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        isDragging = true;
-        isSwipingCard = true;
+    // Show indicator
+    indicator.classList.add('show');
+    indicator.className = `response-indicator ${value} show`;
+    
+    console.log(`Yes/No response for card ${cardIndex}:`, value);
+}
+
+function setupSwipeGestures() {
+    cardContainerEl.addEventListener('touchstart', (e) => {
+        gesture.startY = e.touches[0].clientY;
+        gesture.startX = e.touches[0].clientX;
+        isSwiping = true;
     });
     
-    card.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
+    cardContainerEl.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
         e.preventDefault();
         
-        const currentX = e.touches[0].clientX;
-        const deltaX = currentX - startX;
+        gesture.currentY = e.touches[0].clientY;
+        gesture.currentX = e.touches[0].clientX;
         
-        // Allow movement but keep centered position
-        if (Math.abs(deltaX) > 20) {
-            if (deltaX > 0) {
-                card.classList.add('swiping-right');
-                card.classList.remove('swiping-left', 'swiping-center');
-            } else {
-                card.classList.add('swiping-left');
-                card.classList.remove('swiping-right', 'swiping-center');
+        const deltaY = gesture.currentY - gesture.startY;
+        const deltaX = gesture.currentX - gesture.startX;
+        
+        const activeCard = document.querySelector('.card.active');
+        if (!activeCard) return;
+        
+        // Determine swipe direction
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            // Vertical swipe
+            if (deltaY > 20) {
+                activeCard.classList.add('swiping-down');
+                activeCard.classList.remove('swiping-up');
+            } else if (deltaY < -20) {
+                activeCard.classList.add('swiping-up');
+                activeCard.classList.remove('swiping-down');
             }
         } else {
-            card.classList.add('swiping-center');
-            card.classList.remove('swiping-right', 'swiping-left');
+            // Horizontal swipe (for yes/no cards)
+            const currentCard = cardConfig[currentCardIndex];
+            if (currentCard.type === 'yesno') {
+                if (deltaX > 20) {
+                    activeCard.classList.add('swiping-right');
+                    activeCard.classList.remove('swiping-left');
+                } else if (deltaX < -20) {
+                    activeCard.classList.add('swiping-left');
+                    activeCard.classList.remove('swiping-right');
+                }
+            }
         }
     });
     
-    card.addEventListener('touchend', (e) => {
-        if (!isDragging) return;
+    cardContainerEl.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
         
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const deltaX = endX - startX;
-        const deltaY = endY - startY;
+        const deltaY = gesture.currentY - gesture.startY;
+        const deltaX = gesture.currentX - gesture.startX;
         
-        card.classList.remove('swiping-right', 'swiping-left', 'swiping-center');
+        const activeCard = document.querySelector('.card.active');
+        if (activeCard) {
+            activeCard.classList.remove('swiping-up', 'swiping-down', 'swiping-left', 'swiping-right');
+        }
         
-        // Only proceed if it's a clear horizontal swipe
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
-            if (deltaX > 0) {
-                selectYesNoOption('yes');
+        // Handle navigation
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+            if (deltaY > 0) {
+                // Swipe down - go back
+                previousCard();
             } else {
-                selectYesNoOption('no');
+                // Swipe up - go forward
+                nextCard();
+            }
+        } else if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 80) {
+            // Handle yes/no swipe
+            const currentCard = cardConfig[currentCardIndex];
+            if (currentCard.type === 'yesno') {
+                if (deltaX > 0) {
+                    selectYesNo(currentCardIndex, 'yes');
+                } else {
+                    selectYesNo(currentCardIndex, 'no');
+                }
             }
         }
         
-        isDragging = false;
-        isSwipingCard = false;
+        isSwiping = false;
     });
 }
 
-function setupSemanticInteractions() {
-    const bar = document.getElementById('semanticBar');
-    const slider = document.getElementById('semanticSlider');
-    let isDragging = false;
-    let startX = 0;
-    let sliderStartX = 0;
-    
-    function updateSliderPosition(x) {
-        const barRect = bar.getBoundingClientRect();
-        const relativeX = x - barRect.left;
-        const maxX = barRect.width - 50; // 50 is slider width
-        const clampedX = Math.max(10, Math.min(relativeX, maxX));
-        
-        slider.style.left = `${clampedX}px`;
-        
-        // Calculate value (1-5)
-        const percent = (clampedX - 10) / (maxX - 10);
-        const value = Math.round(percent * 4) + 1;
-        
-        return value;
-    }
-    
-    bar.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        sliderStartX = parseInt(slider.style.left) || 10;
-        e.preventDefault();
-    });
-    
-    bar.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        startX = e.touches[0].clientX;
-        sliderStartX = parseInt(slider.style.left) || 10;
-        e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const value = updateSliderPosition(e.clientX);
-    });
-    
+function preventPullToRefresh() {
     document.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        const value = updateSliderPosition(e.touches[0].clientX);
-        e.preventDefault();
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            const value = updateSliderPosition(startX);
-            selectSemanticOption(value);
-            isDragging = false;
+        if (e.target.closest('.card-container')) {
+            e.preventDefault();
         }
-    });
-    
-    document.addEventListener('touchend', () => {
-        if (isDragging) {
-            const value = updateSliderPosition(startX);
-            selectSemanticOption(value);
-            isDragging = false;
-        }
-    });
-    
-    // Tap to set position
-    bar.addEventListener('click', (e) => {
-        const value = updateSliderPosition(e.clientX);
-        selectSemanticOption(value);
-    });
-    
-    bar.addEventListener('touchend', (e) => {
-        const value = updateSliderPosition(e.changedTouches[0].clientX);
-        selectSemanticOption(value);
-    });
+    }, { passive: false });
 }
 
-function resetLikertOptions() {
-    document.querySelectorAll('.likert-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-}
-
-function selectLikertOption(value) {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
-    
-    responses.push({
-        sectionId: section.id,
-        sectionTitle: section.title,
-        itemIndex: currentItemIndex,
-        question: currentItem,
-        value: parseInt(value),
-        type: 'likert',
-        timestamp: Date.now()
-    });
-    
-    console.log(`Likert response: ${value} for "${currentItem}"`);
-    
-    setTimeout(() => {
-        nextItem();
-    }, 500);
-}
-
-function selectYesNoOption(value) {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
-    
-    responses.push({
-        sectionId: section.id,
-        sectionTitle: section.title,
-        itemIndex: currentItemIndex,
-        question: currentItem,
-        value: value,
-        type: 'yesno',
-        timestamp: Date.now()
-    });
-    
-    console.log(`Yes/No response: ${value} for "${currentItem}"`);
-    
-    setTimeout(() => {
-        nextItem();
-    }, 500);
-}
-
-function selectSemanticOption(value) {
-    const section = surveyConfig.sections[currentSectionIndex];
-    const currentItem = section.items[currentItemIndex];
-    
-    responses.push({
-        sectionId: section.id,
-        sectionTitle: section.title,
-        itemIndex: currentItemIndex,
-        question: currentItem.question,
-        value: value,
-        type: 'semantic',
-        timestamp: Date.now()
-    });
-    
-    console.log(`Semantic response: ${value} for "${currentItem.question}"`);
-    
-    setTimeout(() => {
-        nextItem();
-    }, 500);
-}
-
-function nextItem() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    
-    if (currentItemIndex < section.items.length - 1) {
-        currentItemIndex++;
+function nextCard() {
+    if (currentCardIndex < cardConfig.length - 1) {
+        currentCardIndex++;
         showCurrentCard();
-        updateResponseInterface();
         updateProgress();
     } else {
-        nextSection();
-    }
-}
-
-function previousItem() {
-    if (currentItemIndex > 0) {
-        currentItemIndex--;
-        showCurrentCard();
-        updateResponseInterface();
-        updateProgress();
-    } else {
-        previousSection();
-    }
-}
-
-function nextSection() {
-    if (currentSectionIndex < surveyConfig.sections.length - 1) {
-        currentSectionIndex++;
-        showSectionIntro();
-    } else {
+        // At the end - show completion
         showCompletion();
     }
 }
 
-function previousSection() {
-    if (currentSectionIndex > 0) {
-        currentSectionIndex--;
-        showSectionIntro();
+function previousCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        showCurrentCard();
+        updateProgress();
+    } else {
+        // At the beginning - give feedback
+        showStartFeedback();
     }
 }
 
 function updateProgress() {
-    const section = surveyConfig.sections[currentSectionIndex];
-    currentSectionEl.textContent = currentSectionIndex + 1;
-    currentItemEl.textContent = currentItemIndex + 1;
-    totalItemsEl.textContent = section.items.length;
+    currentCardEl.textContent = currentCardIndex + 1;
     
-    // Calculate overall progress
-    let totalItems = 0;
-    let completedItems = 0;
-    
-    surveyConfig.sections.forEach((s, sIndex) => {
-        totalItems += s.items.length;
-        if (sIndex < currentSectionIndex) {
-            completedItems += s.items.length;
-        } else if (sIndex === currentSectionIndex) {
-            completedItems += currentItemIndex;
-        }
-    });
-    
-    const progressPercent = (completedItems / totalItems) * 100;
+    const progressPercent = (currentCardIndex / (cardConfig.length - 1)) * 100;
     progressFillEl.style.width = `${progressPercent}%`;
 }
 
+function showStartFeedback() {
+    const activeCard = document.querySelector('.card.active');
+    if (activeCard) {
+        activeCard.classList.add('swiping-down');
+        setTimeout(() => {
+            activeCard.classList.remove('swiping-down');
+        }, 300);
+    }
+}
+
 function showCompletion() {
-    const totalResponses = responses.length;
-    const likertResponses = responses.filter(r => r.type === 'likert');
-    const yesNoResponses = responses.filter(r => r.type === 'yesno');
-    const semanticResponses = responses.filter(r => r.type === 'semantic');
+    const totalResponses = Object.keys(responses).length;
+    const checkResponses = Object.values(responses).filter(r => r === 'check').length;
+    const yesResponses = Object.values(responses).filter(r => r === 'yes').length;
+    const noResponses = Object.values(responses).filter(r => r === 'no').length;
     
-    let avgLikert = 0;
-    if (likertResponses.length > 0) {
-        avgLikert = likertResponses.reduce((sum, r) => sum + r.value, 0) / likertResponses.length;
-    }
-    
-    let avgSemantic = 0;
-    if (semanticResponses.length > 0) {
-        avgSemantic = semanticResponses.reduce((sum, r) => sum + r.value, 0) / semanticResponses.length;
-    }
-    
-    const yesCount = yesNoResponses.filter(r => r.value === 'yes').length;
-    const noCount = yesNoResponses.filter(r => r.value === 'no').length;
-    
-    contentContainerEl.innerHTML = `
-        <div class="section-intro">
-            <h2 class="section-title">Survey Complete!</h2>
-            <p class="section-description">
-                You responded to ${totalResponses} items across ${surveyConfig.sections.length} sections.
+    cardContainerEl.innerHTML = `
+        <div class="card text-card active">
+            <div class="card-presentation">Complete</div>
+            <div class="card-main-text">Survey Complete!</div>
+            <div class="card-description">
+                You responded to ${totalResponses} out of ${cardConfig.length} cards.
                 <br><br>
-                Average Likert score: ${avgLikert.toFixed(1)}/5
+                Check responses: ${checkResponses}
                 <br>
-                Average Semantic score: ${avgSemantic.toFixed(1)}/5
+                Yes responses: ${yesResponses}
                 <br>
-                Yes/No ratio: ${yesCount} yes, ${noCount} no
-            </p>
+                No responses: ${noResponses}
+                <br><br>
+                Thank you for participating!
+            </div>
         </div>
     `;
     
     console.log('All responses:', responses);
 }
 
-// Swipe gestures for navigation
-contentContainerEl.addEventListener('touchstart', (e) => {
-    if (!isInSection) return;
-    gesture.startY = e.touches[0].clientY;
-});
-
-contentContainerEl.addEventListener('touchmove', (e) => {
-    if (!isInSection) return;
-    const deltaY = e.touches[0].clientY - gesture.startY;
-    
-    if (Math.abs(deltaY) > 20) {
-        const activeCard = document.querySelector('.item-card.active');
-        if (activeCard) {
-            if (deltaY > 0) {
-                activeCard.classList.add('swiping-down');
-                activeCard.classList.remove('swiping-up');
-            } else {
-                activeCard.classList.add('swiping-up');
-                activeCard.classList.remove('swiping-down');
-            }
-        }
-    }
-});
-
-contentContainerEl.addEventListener('touchend', (e) => {
-    if (!isInSection) return;
-    const deltaY = e.changedTouches[0].clientY - gesture.startY;
-    
-    const activeCard = document.querySelector('.item-card.active');
-    if (activeCard) {
-        activeCard.classList.remove('swiping-up', 'swiping-down');
-    }
-    
-    if (Math.abs(deltaY) > 50) {
-        if (deltaY > 0) {
-            // Swipe down - go back
-            previousItem();
-        } else {
-            // Swipe up - skip
-            nextItem();
-        }
-    }
-});
-
-// Navigation
-backBtn.addEventListener('click', () => {
-    if (isInSection) {
-        previousItem();
-    } else {
-        previousSection();
-    }
-});
-
 // Keyboard navigation
 document.addEventListener('keydown', (e) => {
-    if (!isInSection) return;
-    
-    const section = surveyConfig.sections[currentSectionIndex];
-    
-    if (section.type === 'likert') {
-        if (e.key >= '1' && e.key <= '5') {
-            selectLikertOption(parseInt(e.key));
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+        nextCard();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+        previousCard();
+    } else if (e.key === ' ') {
+        // Space bar for check boxes
+        const currentCard = cardConfig[currentCardIndex];
+        if (currentCard.type === 'check') {
+            toggleCheckBox(currentCardIndex);
         }
-    } else if (section.type === 'yesno') {
-        if (e.key === 'y' || e.key === 'Y') {
-            selectYesNoOption('yes');
-        } else if (e.key === 'n' || e.key === 'N') {
-            selectYesNoOption('no');
+    } else if (e.key === 'y' || e.key === 'Y') {
+        // Y for yes
+        const currentCard = cardConfig[currentCardIndex];
+        if (currentCard.type === 'yesno') {
+            selectYesNo(currentCardIndex, 'yes');
         }
-    } else if (section.type === 'semantic') {
-        if (e.key >= '1' && e.key <= '5') {
-            selectSemanticOption(parseInt(e.key));
+    } else if (e.key === 'n' || e.key === 'N') {
+        // N for no
+        const currentCard = cardConfig[currentCardIndex];
+        if (currentCard.type === 'yesno') {
+            selectYesNo(currentCardIndex, 'no');
         }
-    }
-    
-    if (e.key === 'ArrowLeft') {
-        previousItem();
-    } else if (e.key === 'ArrowRight') {
-        nextItem();
     }
 });
-
-// Prevent page scrolling during interactions
-document.addEventListener('touchmove', (e) => {
-    if (e.target.closest('.likert-scale') || 
-        e.target.closest('.yes-no-card') || 
-        e.target.closest('.semantic-bar')) {
-        e.preventDefault();
-    }
-}, { passive: false });
 
 // Initialize
 init();

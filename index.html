@@ -4,35 +4,25 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>SLIK - Multi-Section Survey</title>
+    <title>SLIK - Card Survey</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
     <div id="app">
-        <!-- TOP AREA: Progress, Info, Theme Toggle -->
-        <div class="top-area">
-            <div class="header">
-                <button id="backBtn" class="nav-btn">←</button>
-                <div class="app-info">
-                    <h1 class="app-title">SLIK Survey</h1>
-                    <div class="progress-info">
-                        Section <span id="currentSection">1</span> of <span id="totalSections">4</span>
-                        • Item <span id="currentItem">1</span> of <span id="totalItems">5</span>
-                    </div>
-                </div>
-                <button id="themeBtn" class="nav-btn">🌙</button>
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="progress-info">
+                Card <span id="currentCard">1</span> of <span id="totalCards">10</span>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
 
-        <!-- BOTTOM AREA: Main Content (Cards, Responses, Everything) -->
-        <div class="bottom-area" id="bottomArea">
-            <div class="content-container" id="contentContainer">
-                <!-- All content (section intros, cards, responses) will be here -->
-            </div>
+        <!-- CARD CONTAINER -->
+        <div class="card-container" id="cardContainer">
+            <!-- Cards will be dynamically inserted here -->
         </div>
     </div>
     <script src="script.js"></script>
