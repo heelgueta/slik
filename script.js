@@ -139,17 +139,21 @@ function createCards() {
                 <div class="response-indicator yes" id="responseIndicator${index}">✓</div>
             `;
         }
+        
         // Add swipe hints (top and bottom)
         cardHTML += `<div class="swipe-hint top" id="swipeHintTop${index}"></div>`;
         cardHTML += `<div class="swipe-hint bottom" id="swipeHint${index}"></div>`;
+        
         cardEl.innerHTML = cardHTML;
         cardContainerEl.appendChild(cardEl);
     });
+    
     setupCardInteractions();
     updateSwipeHints();
 }
 
 function setupCardInteractions() {
+    // Check box interactions
     document.querySelectorAll('.check-box').forEach((box, index) => {
         box.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -161,6 +165,8 @@ function setupCardInteractions() {
             }
         });
     });
+    
+    // Yes/No button interactions
     document.querySelectorAll('.yes-no-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -198,6 +204,7 @@ function showCurrentCard() {
 function showResponseIndicator(cardIndex) {
     const card = cardConfig[cardIndex];
     const indicator = document.getElementById(`responseIndicator${cardIndex}`);
+    
     if (indicator && responses[cardIndex]) {
         indicator.classList.add('show');
         indicator.innerHTML = '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="black"/><path d="M8 14.5L12 18.5L20 10.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -211,6 +218,12 @@ function toggleCheckBox(cardIndex, undo = false) {
     const box = document.getElementById(`checkBox${cardIndex}`);
     const icon = document.getElementById(`checkIcon${cardIndex}`);
     const indicator = document.getElementById(`responseIndicator${cardIndex}`);
+    
+    if (!box || !icon || !indicator) {
+        console.error('Checkbox elements not found for card', cardIndex);
+        return;
+    }
+    
     if (undo) {
         box.classList.remove('checked');
         icon.className = 'check-x';
@@ -224,7 +237,9 @@ function toggleCheckBox(cardIndex, undo = false) {
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
     }
+    
     updateSwipeHints();
+    console.log(`Check response for card ${cardIndex}:`, responses[cardIndex]);
 }
 
 function selectYesNo(cardIndex, value) {
@@ -232,10 +247,12 @@ function selectYesNo(cardIndex, value) {
     const yesBtn = card.querySelector('.yes');
     const noBtn = card.querySelector('.no');
     const indicator = document.getElementById(`responseIndicator${cardIndex}`);
+    
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
     card.classList.remove('swiping-left', 'swiping-right', 'swiping-center');
     card.style.borderColor = '';
+    
     if (!value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
@@ -251,7 +268,9 @@ function selectYesNo(cardIndex, value) {
         }
         indicator.classList.add('show');
     }
+    
     updateSwipeHints();
+    console.log(`Yes/No response for card ${cardIndex}:`, value);
 }
 
 function updateSwipeHints() {
@@ -260,6 +279,7 @@ function updateSwipeHints() {
         const hintTop = document.getElementById(`swipeHintTop${index}`);
         const hintBottom = document.getElementById(`swipeHint${index}`);
         if (!hintTop || !hintBottom) return;
+        
         // Set text
         hintTop.textContent = 'Swipe down to go back';
         if (card.type === 'yesno' && !responses[index]) {
@@ -267,9 +287,11 @@ function updateSwipeHints() {
         } else {
             hintBottom.textContent = 'Swipe up to continue';
         }
+        
         // Reset opacity
         hintTop.style.opacity = '1';
         hintBottom.style.opacity = '1';
+        
         // Dissolve after 3 pulses (6s)
         setTimeout(() => { hintTop.style.opacity = '0'; }, 6000);
         setTimeout(() => { hintBottom.style.opacity = '0'; }, 6000);
@@ -279,148 +301,191 @@ function updateSwipeHints() {
 function setupSwipeGestures() {
     cardContainerEl.addEventListener('touchstart', (e) => {
         if (isCompleted) return;
+        
+        // Don't start swipe if clicking on interactive elements
         if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
             return;
         }
+        
         gesture.startY = e.touches[0].clientY;
         gesture.startX = e.touches[0].clientX;
         isSwiping = true;
     });
+    
     cardContainerEl.addEventListener('mousedown', (e) => {
         if (isCompleted) return;
+        
+        // Don't start swipe if clicking on interactive elements
         if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
             return;
         }
+        
         gesture.startY = e.clientY;
         gesture.startX = e.clientX;
         isSwiping = true;
     });
+    
     cardContainerEl.addEventListener('touchmove', (e) => {
         if (!isSwiping || isCompleted) return;
         e.preventDefault();
+        
         gesture.currentY = e.touches[0].clientY;
         gesture.currentX = e.touches[0].clientX;
+        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
+        
         const activeCard = document.querySelector('.card.active');
         if (!activeCard) return;
+        
         const currentCard = cardConfig[currentCardIndex];
+        
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            if (deltaY > 20) {
+            // Vertical swipe
+            if (deltaY > 30) {
                 activeCard.classList.add('swiping-down');
                 activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
-            } else if (deltaY < -20) {
+            } else if (deltaY < -30) {
                 activeCard.classList.add('swiping-up');
                 activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
             }
         } else if (currentCard.type === 'yesno') {
-            if (Math.abs(deltaX) < 40) {
+            // Horizontal swipe for yes/no cards
+            if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
                 activeCard.classList.remove('swiping-left', 'swiping-right');
-            } else if (deltaX > 40) {
+            } else if (deltaX > 50) {
                 activeCard.classList.add('swiping-right');
                 activeCard.classList.remove('swiping-left', 'swiping-center');
-            } else if (deltaX < -40) {
+            } else if (deltaX < -50) {
                 activeCard.classList.add('swiping-left');
                 activeCard.classList.remove('swiping-right', 'swiping-center');
             }
         }
     });
+    
     cardContainerEl.addEventListener('mousemove', (e) => {
         if (!isSwiping || isCompleted) return;
         e.preventDefault();
+        
         gesture.currentY = e.clientY;
         gesture.currentX = e.clientX;
+        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
+        
         const activeCard = document.querySelector('.card.active');
         if (!activeCard) return;
+        
         const currentCard = cardConfig[currentCardIndex];
+        
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
-            if (deltaY > 20) {
+            // Vertical swipe
+            if (deltaY > 30) {
                 activeCard.classList.add('swiping-down');
                 activeCard.classList.remove('swiping-up', 'swiping-left', 'swiping-right', 'swiping-center');
-            } else if (deltaY < -20) {
+            } else if (deltaY < -30) {
                 activeCard.classList.add('swiping-up');
                 activeCard.classList.remove('swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
             }
         } else if (currentCard.type === 'yesno') {
-            if (Math.abs(deltaX) < 40) {
+            // Horizontal swipe for yes/no cards
+            if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
                 activeCard.classList.remove('swiping-left', 'swiping-right');
-            } else if (deltaX > 40) {
+            } else if (deltaX > 50) {
                 activeCard.classList.add('swiping-right');
                 activeCard.classList.remove('swiping-left', 'swiping-center');
-            } else if (deltaX < -40) {
+            } else if (deltaX < -50) {
                 activeCard.classList.add('swiping-left');
                 activeCard.classList.remove('swiping-right', 'swiping-center');
             }
         }
     });
+    
     cardContainerEl.addEventListener('touchend', (e) => {
         if (!isSwiping || isCompleted) return;
+        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
+        
         const activeCard = document.querySelector('.card.active');
         if (activeCard) {
             activeCard.classList.remove('swiping-up', 'swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
             activeCard.style.borderColor = '';
         }
+        
         const currentCard = cardConfig[currentCardIndex];
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+        
+        // Handle navigation with increased thresholds
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
             if (deltaY > 0) {
+                // Swipe down - go back
                 previousCard();
             } else {
+                // Swipe up - go forward or auto-advance if responded
                 if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
                     setTimeout(() => nextCard(), 150);
                 } else {
                     nextCard();
                 }
             }
-        } else if (currentCard.type === 'yesno') {
-            if (Math.abs(deltaX) < 40) {
+        } else if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
+            // Handle yes/no swipe with increased threshold
+            if (Math.abs(deltaX) < 50) {
                 // Center anchor, do nothing
-            } else if (deltaX > 40) {
+            } else if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
                 setTimeout(() => nextCard(), 350);
-            } else if (deltaX < -40) {
+            } else if (deltaX < -50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
                 setTimeout(() => nextCard(), 350);
             }
         }
+        
         isSwiping = false;
     });
+    
     cardContainerEl.addEventListener('mouseup', (e) => {
         if (!isSwiping || isCompleted) return;
+        
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
+        
         const activeCard = document.querySelector('.card.active');
         if (activeCard) {
             activeCard.classList.remove('swiping-up', 'swiping-down', 'swiping-left', 'swiping-right', 'swiping-center');
             activeCard.style.borderColor = '';
         }
+        
         const currentCard = cardConfig[currentCardIndex];
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+        
+        // Handle navigation with increased thresholds
+        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
             if (deltaY > 0) {
+                // Swipe down - go back
                 previousCard();
             } else {
+                // Swipe up - go forward or auto-advance if responded
                 if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
                     setTimeout(() => nextCard(), 150);
                 } else {
                     nextCard();
                 }
             }
-        } else if (currentCard.type === 'yesno') {
-            if (Math.abs(deltaX) < 40) {
+        } else if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
+            // Handle yes/no swipe with increased threshold
+            if (Math.abs(deltaX) < 50) {
                 // Center anchor, do nothing
-            } else if (deltaX > 40) {
+            } else if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
                 setTimeout(() => nextCard(), 350);
-            } else if (deltaX < -40) {
+            } else if (deltaX < -50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
                 setTimeout(() => nextCard(), 350);
             }
         }
+        
         isSwiping = false;
     });
 }

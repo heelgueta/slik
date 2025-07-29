@@ -73,7 +73,7 @@ body, html {
     background: #fff;
     margin: 20px;
     border-radius: 20px;
-    padding: 40px 30px 40px 30px;
+    padding: 40px 30px 60px 30px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -85,7 +85,7 @@ body, html {
     border: 1.5px solid #e0e0e0;
     cursor: pointer;
     user-select: none;
-    max-height: calc(100vh - 40px - env(safe-area-inset-bottom));
+    max-height: calc(100vh - 40px - env(safe-area-inset-bottom) - 80px);
     box-sizing: border-box;
     overflow: auto;
 }
@@ -119,17 +119,20 @@ body, html {
 .card.swiping-left {
     transform: translateX(-100px) rotate(-15deg);
     opacity: 0.7;
-    border-color: #ff9500 !important; /* orange for NO */
+    border-color: #ff9500 !important;
+    border-width: 3px !important;
 }
 
 .card.swiping-right {
     transform: translateX(100px) rotate(15deg);
     opacity: 0.7;
-    border-color: #0074D9 !important; /* blue for YES */
+    border-color: #0074D9 !important;
+    border-width: 3px !important;
 }
 
 .card.swiping-center {
     border-color: #e0e0e0 !important;
+    border-width: 1.5px !important;
 }
 
 .card-presentation {
@@ -278,7 +281,7 @@ body, html {
 
 .response-indicator {
     position: absolute;
-    top: 18px;
+    top: 50px;
     left: 50%;
     transform: translate(-50%, 0);
     width: 50px;
@@ -292,9 +295,9 @@ body, html {
     transition: opacity 0.3s ease;
     z-index: 10;
     pointer-events: none;
-    background: #fff !important;
-    color: #222 !important;
-    border: 2.5px solid #222 !important;
+    background: #000 !important;
+    color: #fff !important;
+    border: 2.5px solid #000 !important;
 }
 
 .response-indicator.show {
