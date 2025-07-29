@@ -202,7 +202,7 @@ body, html {
 }
 
 .check-box .check-tick {
-    font-size: 1.2em;
+    font-size: 1em;
     color: #000;
     font-weight: 700;
     pointer-events: none;
@@ -218,6 +218,12 @@ body, html {
 
 .check-box.checked .check-tick {
     color: #fff;
+}
+
+/* Add specific styling for checked check cards */
+.check-card[style*="border-color: #4CAF50"] {
+    border-color: #4CAF50 !important;
+    border-width: 3px !important;
 }
 
 .yes-no-card {

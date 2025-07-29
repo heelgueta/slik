@@ -160,10 +160,13 @@ function setupCardInteractions() {
     document.querySelectorAll('.check-box').forEach((box, index) => {
         box.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (responses[index]) {
-                toggleCheckBox(index, true);
+            const cardIndex = parseInt(box.closest('.card').dataset.index);
+            if (responses[cardIndex] === 'check') {
+                // Undo the check
+                toggleCheckBox(cardIndex, true);
             } else {
-                toggleCheckBox(index, false);
+                // Check the box
+                toggleCheckBox(cardIndex, false);
                 setTimeout(() => nextCard(), 350);
             }
         });
@@ -176,8 +179,10 @@ function setupCardInteractions() {
             const cardIndex = parseInt(btn.dataset.card);
             const value = btn.dataset.value;
             if (responses[cardIndex] === value) {
+                // Undo the selection
                 selectYesNo(cardIndex, null);
             } else {
+                // Select the option
                 selectYesNo(cardIndex, value);
                 setTimeout(() => nextCard(), 350);
             }
@@ -218,10 +223,10 @@ function showResponseIndicator(cardIndex) {
 }
 
 function toggleCheckBox(cardIndex, undo = false) {
-    const box = document.getElementById(`checkBox${cardIndex}`);
-    const icon = document.getElementById(`checkIcon${cardIndex}`);
-    const indicator = document.getElementById(`responseIndicator${cardIndex}`);
     const card = document.querySelector(`[data-index="${cardIndex}"]`);
+    const box = card.querySelector('.check-box');
+    const icon = card.querySelector('.check-tick');
+    const indicator = card.querySelector('.response-indicator');
     
     if (!box || !icon || !indicator) {
         console.error('Checkbox elements not found for card', cardIndex);
@@ -239,7 +244,7 @@ function toggleCheckBox(cardIndex, undo = false) {
         icon.style.display = 'block';
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
-        card.style.borderColor = '#000';
+        card.style.borderColor = '#4CAF50';
     }
     
     updateSwipeHints();
@@ -250,7 +255,7 @@ function selectYesNo(cardIndex, value) {
     const card = document.querySelector(`[data-index="${cardIndex}"]`);
     const yesBtn = card.querySelector('.yes');
     const noBtn = card.querySelector('.no');
-    const indicator = document.getElementById(`responseIndicator${cardIndex}`);
+    const indicator = card.querySelector('.response-indicator');
     
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
@@ -260,6 +265,13 @@ function selectYesNo(cardIndex, value) {
     if (!value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
+        // Reset button styles to default
+        yesBtn.style.background = '';
+        yesBtn.style.color = '';
+        yesBtn.style.borderColor = '';
+        noBtn.style.background = '';
+        noBtn.style.color = '';
+        noBtn.style.borderColor = '';
     } else {
         if (value === 'yes') {
             yesBtn.classList.add('selected');
@@ -435,8 +447,20 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
+        // Only trigger navigation if there's a significant swipe
+        const minSwipeDistance = 80;
+        
+        // Check if this was actually a swipe (not just a tap)
+        const isActualSwipe = Math.abs(deltaY) > minSwipeDistance || Math.abs(deltaX) > minSwipeDistance;
+        
+        if (!isActualSwipe) {
+            isSwiping = false;
+            isHorizontalSwiping = false;
+            return;
+        }
+        
         // Handle navigation based on card type and swipe direction
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
+        if (currentCard.type === 'yesno' && Math.abs(deltaX) > minSwipeDistance) {
             // Horizontal swipe for yes/no cards
             if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
@@ -445,7 +469,7 @@ function setupSwipeGestures() {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
                 setTimeout(() => nextCard(), 350);
             }
-        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
+        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > minSwipeDistance) {
             // Vertical swipe for all cards
             if (deltaY > 0) {
                 // Swipe down - go back
@@ -478,8 +502,20 @@ function setupSwipeGestures() {
         
         const currentCard = cardConfig[currentCardIndex];
         
+        // Only trigger navigation if there's a significant swipe
+        const minSwipeDistance = 80;
+        
+        // Check if this was actually a swipe (not just a tap)
+        const isActualSwipe = Math.abs(deltaY) > minSwipeDistance || Math.abs(deltaX) > minSwipeDistance;
+        
+        if (!isActualSwipe) {
+            isSwiping = false;
+            isHorizontalSwiping = false;
+            return;
+        }
+        
         // Handle navigation based on card type and swipe direction
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > 100) {
+        if (currentCard.type === 'yesno' && Math.abs(deltaX) > minSwipeDistance) {
             // Horizontal swipe for yes/no cards
             if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
@@ -488,7 +524,7 @@ function setupSwipeGestures() {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'no' ? null : 'no');
                 setTimeout(() => nextCard(), 350);
             }
-        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 80) {
+        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > minSwipeDistance) {
             // Vertical swipe for all cards
             if (deltaY > 0) {
                 // Swipe down - go back
