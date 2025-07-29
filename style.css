@@ -60,6 +60,8 @@ body, html {
     position: relative;
     overflow: hidden;
     background: #f8f9fa;
+    height: 100%;
+    min-height: 0;
 }
 
 .card {
@@ -78,13 +80,14 @@ body, html {
     align-items: center;
     text-align: center;
     transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.2s;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
+    border: 1.5px solid #e0e0e0;
     cursor: pointer;
     user-select: none;
     max-height: calc(100vh - 40px - env(safe-area-inset-bottom));
     box-sizing: border-box;
+    overflow: auto;
 }
 
 .card.active {
@@ -93,7 +96,6 @@ body, html {
 }
 
 .card.previous {
-    /* No transparency, just out of view */
     transform: translateY(-100%);
     z-index: 1;
 }
@@ -117,11 +119,17 @@ body, html {
 .card.swiping-left {
     transform: translateX(-100px) rotate(-15deg);
     opacity: 0.7;
+    border-color: #ff9500 !important; /* orange for NO */
 }
 
 .card.swiping-right {
     transform: translateX(100px) rotate(15deg);
     opacity: 0.7;
+    border-color: #0074D9 !important; /* blue for YES */
+}
+
+.card.swiping-center {
+    border-color: #e0e0e0 !important;
 }
 
 .card-presentation {
@@ -175,28 +183,41 @@ body, html {
 .check-box {
     width: 80px;
     height: 80px;
-    border: 3px solid #e0e0e0;
+    border: 3px solid #0074D9;
     border-radius: 15px;
     margin: 20px 0 40px 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2em;
+    font-size: 2.5em;
     cursor: pointer;
     transition: all 0.3s ease;
     background: #fff;
     position: relative;
+    color: #222;
+    font-weight: 700;
 }
 
-.check-box:hover {
-    border-color: #0074D9;
-    transform: scale(1.05);
+.check-box .check-x {
+    font-size: 1.2em;
+    color: #222;
+    font-weight: 700;
+    pointer-events: none;
+    user-select: none;
+}
+
+.check-box .check-tick {
+    font-size: 1.2em;
+    color: #222;
+    font-weight: 700;
+    pointer-events: none;
+    user-select: none;
 }
 
 .check-box.checked {
-    background: #0074D9;
+    background: #fff;
     border-color: #0074D9;
-    color: #fff;
+    color: #0074D9;
     transform: scale(1.1);
 }
 
@@ -232,30 +253,29 @@ body, html {
 }
 
 .yes-no-btn.yes {
-    border-color: #2E8B57;
-    color: #2E8B57;
+    border-color: #0074D9;
+    color: #0074D9;
 }
 
 .yes-no-btn.yes:hover,
 .yes-no-btn.yes.selected {
-    background: linear-gradient(135deg, #2E8B57, #228B22);
+    background: #0074D9;
     color: #fff;
-    border-color: #2E8B57;
+    border-color: #0074D9;
 }
 
 .yes-no-btn.no {
-    border-color: #DC143C;
-    color: #DC143C;
+    border-color: #ff9500;
+    color: #ff9500;
 }
 
 .yes-no-btn.no:hover,
 .yes-no-btn.no.selected {
-    background: linear-gradient(135deg, #DC143C, #B22222);
+    background: #ff9500;
     color: #fff;
-    border-color: #DC143C;
+    border-color: #ff9500;
 }
 
-/* RESPONSE INDICATORS - Top center, always black for check */
 .response-indicator {
     position: absolute;
     top: 18px;
@@ -272,44 +292,40 @@ body, html {
     transition: opacity 0.3s ease;
     z-index: 10;
     pointer-events: none;
+    background: #fff !important;
+    color: #222 !important;
+    border: 2.5px solid #222 !important;
 }
 
 .response-indicator.show {
     opacity: 1;
 }
 
-.response-indicator.check {
-    background: #0074D9;
-    color: #fff;
-}
-
-.response-indicator.yes {
-    background: linear-gradient(135deg, #2E8B57, #228B22);
-    color: #fff;
-}
-
-.response-indicator.no {
-    background: linear-gradient(135deg, #DC143C, #B22222);
-    color: #fff;
-}
-
-.response-indicator.check {
-    background: #0074D9 !important;
-    color: #fff !important;
-}
-
 .swipe-hint {
     position: absolute;
-    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.8em;
+    font-size: 0.9em;
     color: #999;
     opacity: 0.7;
     text-align: center;
     animation: pulse 2s infinite;
     min-width: 180px;
     min-height: 1.5em;
+    pointer-events: none;
+    user-select: none;
+    transition: opacity 0.5s;
+}
+
+.swipe-hint.top {
+    top: 18px;
+    font-size: 0.9em;
+    color: #999;
+    animation-delay: 0.2s;
+}
+
+.swipe-hint.bottom {
+    bottom: 30px;
 }
 
 @keyframes pulse {
