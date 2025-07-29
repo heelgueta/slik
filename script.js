@@ -257,21 +257,22 @@ function selectYesNo(cardIndex, value) {
     const noBtn = card.querySelector('.no');
     const indicator = card.querySelector('.response-indicator');
     
+    // Reset both buttons completely
     yesBtn.classList.remove('selected');
     noBtn.classList.remove('selected');
+    yesBtn.style.background = '';
+    yesBtn.style.color = '';
+    yesBtn.style.borderColor = '';
+    noBtn.style.background = '';
+    noBtn.style.color = '';
+    noBtn.style.borderColor = '';
+    
     card.classList.remove('swiping-left', 'swiping-right', 'swiping-center');
     card.style.borderColor = '';
     
     if (!value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
-        // Reset button styles to default
-        yesBtn.style.background = '';
-        yesBtn.style.color = '';
-        yesBtn.style.borderColor = '';
-        noBtn.style.background = '';
-        noBtn.style.color = '';
-        noBtn.style.borderColor = '';
     } else {
         if (value === 'yes') {
             yesBtn.classList.add('selected');
@@ -323,6 +324,8 @@ function setupSwipeGestures() {
         
         gesture.startY = e.touches[0].clientY;
         gesture.startX = e.touches[0].clientX;
+        gesture.currentY = e.touches[0].clientY;
+        gesture.currentX = e.touches[0].clientX;
         isSwiping = true;
         isHorizontalSwiping = false;
     });
@@ -337,6 +340,8 @@ function setupSwipeGestures() {
         
         gesture.startY = e.clientY;
         gesture.startX = e.clientX;
+        gesture.currentY = e.clientY;
+        gesture.currentX = e.clientX;
         isSwiping = true;
         isHorizontalSwiping = false;
     });
@@ -448,7 +453,7 @@ function setupSwipeGestures() {
         const currentCard = cardConfig[currentCardIndex];
         
         // Only trigger navigation if there's a significant swipe
-        const minSwipeDistance = 80;
+        const minSwipeDistance = 100;
         
         // Check if this was actually a swipe (not just a tap)
         const isActualSwipe = Math.abs(deltaY) > minSwipeDistance || Math.abs(deltaX) > minSwipeDistance;
@@ -503,7 +508,7 @@ function setupSwipeGestures() {
         const currentCard = cardConfig[currentCardIndex];
         
         // Only trigger navigation if there's a significant swipe
-        const minSwipeDistance = 80;
+        const minSwipeDistance = 100;
         
         // Check if this was actually a swipe (not just a tap)
         const isActualSwipe = Math.abs(deltaY) > minSwipeDistance || Math.abs(deltaX) > minSwipeDistance;
