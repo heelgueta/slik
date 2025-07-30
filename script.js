@@ -291,23 +291,6 @@ function selectYesNo(cardIndex, value) {
         indicator.classList.remove('show');
         console.log(`Unselected - responses[${cardIndex}]:`, responses[cardIndex]);
         
-        // Temporarily disable transitions to force immediate style change
-        const originalYesTransition = yesBtn.style.transition;
-        const originalNoTransition = noBtn.style.transition;
-        
-        yesBtn.style.transition = 'none';
-        noBtn.style.transition = 'none';
-        
-        // Force a reflow
-        yesBtn.offsetHeight;
-        noBtn.offsetHeight;
-        
-        // Restore transitions
-        setTimeout(() => {
-            yesBtn.style.transition = originalYesTransition;
-            noBtn.style.transition = originalNoTransition;
-        }, 10);
-        
     } else {
         if (value === 'yes') {
             yesBtn.classList.add('selected');
