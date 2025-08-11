@@ -1,5 +1,6 @@
 // Card Configuration
-const cardConfig = [
+function getDefaultCardConfig() {
+    return [
     // Text Cards (2)
     {
         id: 1,
@@ -32,50 +33,74 @@ const cardConfig = [
         description: 'By checking this box, you consent to participate in this survey.'
     },
     
-    // Yes/No Cards (6)
+    // Likert (5-point)
     {
         id: 5,
+        type: 'likert5',
+        presentation: 'Agreement',
+        mainText: 'Statistics is valuable in everyday decision making',
+        description: 'How much do you agree? 1 = strongly disagree, 5 = strongly agree.'
+    },
+
+    // Short text
+    {
+        id: 6,
+        type: 'shorttext',
+        presentation: 'Short answer',
+        mainText: 'What is your favorite chart type?',
+        description: 'Type a short answer below. Tap outside or press enter to continue.'
+    },
+
+    // Yes/No Cards (moved down)
+    {
+        id: 7,
         type: 'yesno',
         presentation: 'Attitude',
         mainText: 'I enjoy learning about statistics',
         description: 'Do you find statistics interesting and engaging?'
     },
     {
-        id: 6,
+        id: 8,
         type: 'yesno',
         presentation: 'Confidence',
         mainText: 'I feel confident with data analysis',
         description: 'Are you comfortable working with data and making analytical decisions?'
     },
     {
-        id: 7,
+        id: 9,
         type: 'yesno',
         presentation: 'Preference',
         mainText: 'I prefer visual data over tables',
         description: 'Do you find charts and graphs more useful than numerical tables?'
     },
     {
-        id: 8,
+        id: 10,
         type: 'yesno',
         presentation: 'Experience',
         mainText: 'I have used statistical software',
         description: 'Have you ever used tools like R, Python, SPSS, or Excel for analysis?'
     },
     {
-        id: 9,
+        id: 11,
         type: 'yesno',
         presentation: 'Interest',
         mainText: 'I want to learn more about data science',
         description: 'Are you interested in developing your data science skills further?'
     },
     {
-        id: 10,
+        id: 12,
         type: 'yesno',
         presentation: 'Application',
         mainText: 'I use data in my daily work',
         description: 'Do you regularly work with data in your professional or academic life?'
     }
-];
+    ];
+}
+
+// Allow dynamic form injection (from form.html)
+let cardConfig = (window.SLIK_FORM_JSON && Array.isArray(window.SLIK_FORM_JSON.cards))
+    ? window.SLIK_FORM_JSON.cards
+    : getDefaultCardConfig();
 
 // DOM Elements
 const currentCardEl = document.getElementById('currentCard');
@@ -86,6 +111,10 @@ const cardContainerEl = document.getElementById('cardContainer');
 // State
 let currentCardIndex = 0;
 let responses = {};
+let eventLog = [];
+let sessionId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+let lastPointerSample = null;
+let currentInputType = null;
 let gesture = { startY: null, startX: null, currentY: null, currentX: null };
 let isSwiping = false;
 let isCompleted = false;
@@ -101,6 +130,15 @@ function init() {
     updateProgress();
     setupSwipeGestures();
     preventPullToRefresh();
+    // Expose for viewer
+    try { window.cardConfigRef = cardConfig; } catch(_) {}
+    logEvent('session_start', {
+        sessionId,
+        userAgent: navigator.userAgent,
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        language: navigator.language,
+        platform: navigator.platform
+    });
 }
 
 function createCards() {
@@ -139,6 +177,25 @@ function createCards() {
                 </div>
                 <div class="response-indicator yes" id="responseIndicator${index}">✓</div>
             `;
+        } else if (card.type === 'likert5') {
+            cardHTML += `
+                <div class="likert-scale" data-card="${index}">
+                    <button class="likert-option" data-value="1" aria-label="Strongly disagree">1</button>
+                    <button class="likert-option" data-value="2" aria-label="Disagree">2</button>
+                    <button class="likert-option" data-value="3" aria-label="Neutral">3</button>
+                    <button class="likert-option" data-value="4" aria-label="Agree">4</button>
+                    <button class="likert-option" data-value="5" aria-label="Strongly agree">5</button>
+                </div>
+                <div class="likert-legend"><span>Strongly disagree</span><span>Neutral</span><span>Strongly agree</span></div>
+                <div class="response-indicator yes" id="responseIndicator${index}">✓</div>
+            `;
+        } else if (card.type === 'shorttext') {
+            cardHTML += `
+                <div class="text-input-wrapper">
+                    <input class="text-input" type="text" inputmode="text" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Type your answer..." data-card="${index}" />
+                </div>
+                <div class="response-indicator yes" id="responseIndicator${index}">✓</div>
+            `;
         }
         
         // Add swipe hints only for text cards
@@ -161,6 +218,10 @@ function setupCardInteractions() {
         box.addEventListener('click', (e) => {
             e.stopPropagation();
             const cardIndex = parseInt(box.closest('.card').dataset.index);
+            const r = box.getBoundingClientRect();
+            const x = Math.round(r.left + r.width/2);
+            const y = Math.round(r.top + r.height/2);
+            logEvent('tap', { x, y, cardIndex, element: 'check-box' });
             if (responses[cardIndex] === 'check') {
                 // Undo the check
                 toggleCheckBox(cardIndex, true);
@@ -178,6 +239,10 @@ function setupCardInteractions() {
             e.stopPropagation();
             const cardIndex = parseInt(btn.dataset.card);
             const value = btn.dataset.value;
+            const r = btn.getBoundingClientRect();
+            const x = Math.round(r.left + r.width/2);
+            const y = Math.round(r.top + r.height/2);
+            logEvent('tap', { x, y, cardIndex, value, element: 'yesno' });
             if (responses[cardIndex] === value) {
                 // Undo the selection - clicking the same button that's already selected
                 selectYesNo(cardIndex, null);
@@ -186,6 +251,53 @@ function setupCardInteractions() {
                 selectYesNo(cardIndex, value);
                 setTimeout(() => nextCard(), 350);
             }
+        });
+    });
+
+    // Likert interactions
+    document.querySelectorAll('.likert-scale').forEach(scale => {
+        scale.querySelectorAll('.likert-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const cardIndex = parseInt(scale.dataset.card);
+                const r = option.getBoundingClientRect();
+                const x = Math.round(r.left + r.width/2);
+                const y = Math.round(r.top + r.height/2);
+                logEvent('tap', { x, y, cardIndex, value: option.dataset.value, element: 'likert' });
+                selectLikert(cardIndex, option.dataset.value);
+                setTimeout(() => nextCard(), 350);
+            });
+        });
+    });
+
+    // Short text interactions
+    document.querySelectorAll('.text-input').forEach(input => {
+        input.addEventListener('click', (e) => e.stopPropagation());
+        input.addEventListener('input', (e) => {
+            const cardIndex = parseInt(input.dataset.card);
+            const text = input.value.trim();
+            logEvent('text_change', { cardIndex, length: text.length });
+            if (text.length > 0) {
+                selectShortText(cardIndex, text);
+            } else {
+                selectShortText(cardIndex, null);
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const cardIndex = parseInt(input.dataset.card);
+                const text = input.value.trim();
+                logEvent('text_enter', { cardIndex, length: text.length });
+                selectShortText(cardIndex, text.length > 0 ? text : null);
+                if (text.length > 0) setTimeout(() => nextCard(), 200);
+            }
+        });
+        input.addEventListener('blur', () => {
+            const text = input.value.trim();
+            const cardIndex = parseInt(input.dataset.card);
+            logEvent('text_blur', { cardIndex, length: text.length });
+            if (text.length > 0) setTimeout(() => nextCard(), 200);
         });
     });
 }
@@ -199,6 +311,7 @@ function showCurrentCard() {
         if (index === currentCardIndex) {
             card.classList.add('active');
             showResponseIndicator(index);
+            logEvent('card_show', { cardIndex: index, type: cardConfig[index].type });
             
             // Reset button states to match current response
             const currentCard = cardConfig[currentCardIndex];
@@ -214,6 +327,20 @@ function showCurrentCard() {
                     } else if (responses[currentCardIndex] === 'no') {
                         noBtn.classList.add('selected');
                     }
+                }
+            } else if (currentCard.type === 'likert5') {
+                const options = card.querySelectorAll('.likert-option');
+                options.forEach(opt => opt.classList.remove('selected'));
+                const value = responses[currentCardIndex];
+                if (value) {
+                    const selected = card.querySelector(`.likert-option[data-value="${value}"]`);
+                    if (selected) selected.classList.add('selected');
+                }
+            } else if (currentCard.type === 'shorttext') {
+                const input = card.querySelector('.text-input');
+                if (input) {
+                    input.value = responses[currentCardIndex] || '';
+                    setTimeout(() => input.focus(), 200);
                 }
             }
         } else if (index < currentCardIndex) {
@@ -255,11 +382,13 @@ function toggleCheckBox(cardIndex, undo = false) {
         icon.style.display = 'none';
         delete responses[cardIndex];
         indicator.classList.remove('show');
+        logEvent('select', { cardIndex, type: 'check', value: null });
     } else {
         box.classList.add('checked');
         icon.style.display = 'block';
         responses[cardIndex] = 'check';
         indicator.classList.add('show');
+        logEvent('select', { cardIndex, type: 'check', value: true });
     }
     
     updateSwipeHints();
@@ -290,6 +419,7 @@ function selectYesNo(cardIndex, value) {
         delete responses[cardIndex];
         indicator.classList.remove('show');
         console.log(`Unselected - responses[${cardIndex}]:`, responses[cardIndex]);
+        logEvent('select', { cardIndex, type: 'yesno', value: null });
         
     } else {
         if (value === 'yes') {
@@ -302,10 +432,45 @@ function selectYesNo(cardIndex, value) {
             console.log(`Selected NO - noBtn.selected:`, noBtn.classList.contains('selected'));
         }
         indicator.classList.add('show');
+        logEvent('select', { cardIndex, type: 'yesno', value: responses[cardIndex] });
     }
     
     updateSwipeHints();
     console.log(`Final responses[${cardIndex}]:`, responses[cardIndex]);
+}
+
+function selectLikert(cardIndex, value) {
+    const card = document.querySelector(`[data-index="${cardIndex}"]`);
+    const indicator = card.querySelector('.response-indicator');
+    const options = card.querySelectorAll('.likert-option');
+    options.forEach(opt => opt.classList.remove('selected'));
+    
+    if (!value) {
+        delete responses[cardIndex];
+        indicator.classList.remove('show');
+    } else {
+        const selected = card.querySelector(`.likert-option[data-value="${value}"]`);
+        if (selected) selected.classList.add('selected');
+        responses[cardIndex] = value;
+        indicator.classList.add('show');
+    }
+    updateSwipeHints();
+    logEvent('select', { cardIndex, type: 'likert5', value: value ? Number(value) : null });
+}
+
+function selectShortText(cardIndex, text) {
+    const card = document.querySelector(`[data-index="${cardIndex}"]`);
+    const indicator = card.querySelector('.response-indicator');
+    if (text && text.length > 0) {
+        responses[cardIndex] = text;
+        indicator.classList.add('show');
+        logEvent('select', { cardIndex, type: 'shorttext', value: text });
+    } else {
+        delete responses[cardIndex];
+        indicator.classList.remove('show');
+        logEvent('select', { cardIndex, type: 'shorttext', value: null });
+    }
+    updateSwipeHints();
 }
 
 function updateSwipeHints() {
@@ -336,7 +501,12 @@ function setupSwipeGestures() {
         if (isCompleted) return;
         
         // Don't start swipe if clicking on interactive elements
-        if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
+        if (
+            e.target.closest('.check-box') ||
+            e.target.closest('.yes-no-btn') ||
+            e.target.closest('.likert-option') ||
+            e.target.closest('.text-input')
+        ) {
             return;
         }
         
@@ -346,13 +516,21 @@ function setupSwipeGestures() {
         gesture.currentX = e.touches[0].clientX;
         isSwiping = true;
         isHorizontalSwiping = false;
+        currentInputType = 'touch';
+        lastPointerSample = [{ t: performance.now(), x: gesture.startX, y: gesture.startY }];
+        logEvent('swipe_start', { x: gesture.startX, y: gesture.startY, cardIndex: currentCardIndex, input: currentInputType });
     });
     
     cardContainerEl.addEventListener('mousedown', (e) => {
         if (isCompleted) return;
         
         // Don't start swipe if clicking on interactive elements
-        if (e.target.closest('.check-box') || e.target.closest('.yes-no-btn')) {
+        if (
+            e.target.closest('.check-box') ||
+            e.target.closest('.yes-no-btn') ||
+            e.target.closest('.likert-option') ||
+            e.target.closest('.text-input')
+        ) {
             return;
         }
         
@@ -362,6 +540,9 @@ function setupSwipeGestures() {
         gesture.currentX = e.clientX;
         isSwiping = true;
         isHorizontalSwiping = false;
+        currentInputType = 'mouse';
+        lastPointerSample = [{ t: performance.now(), x: gesture.startX, y: gesture.startY }];
+        logEvent('swipe_start', { x: gesture.startX, y: gesture.startY, cardIndex: currentCardIndex, input: currentInputType });
     });
     
     cardContainerEl.addEventListener('touchmove', (e) => {
@@ -370,6 +551,7 @@ function setupSwipeGestures() {
         
         gesture.currentY = e.touches[0].clientY;
         gesture.currentX = e.touches[0].clientX;
+        samplePointer(gesture.currentX, gesture.currentY);
         
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
@@ -380,12 +562,12 @@ function setupSwipeGestures() {
         const currentCard = cardConfig[currentCardIndex];
         
         // For yes/no cards, check if horizontal swiping is happening
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > 30) {
+        if ((currentCard.type === 'yesno') && Math.abs(deltaX) > 30) {
             isHorizontalSwiping = true;
         }
         
         // If we're horizontally swiping on yes/no, only show horizontal feedback
-        if (currentCard.type === 'yesno' && isHorizontalSwiping) {
+        if ((currentCard.type === 'yesno') && isHorizontalSwiping) {
             if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
                 activeCard.classList.remove('swiping-left', 'swiping-right', 'swiping-up', 'swiping-down');
@@ -416,6 +598,7 @@ function setupSwipeGestures() {
         
         gesture.currentY = e.clientY;
         gesture.currentX = e.clientX;
+        samplePointer(gesture.currentX, gesture.currentY);
         
         const deltaY = gesture.currentY - gesture.startY;
         const deltaX = gesture.currentX - gesture.startX;
@@ -426,12 +609,12 @@ function setupSwipeGestures() {
         const currentCard = cardConfig[currentCardIndex];
         
         // For yes/no cards, check if horizontal swiping is happening
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > 30) {
+        if ((currentCard.type === 'yesno') && Math.abs(deltaX) > 30) {
             isHorizontalSwiping = true;
         }
         
         // If we're horizontally swiping on yes/no, only show horizontal feedback
-        if (currentCard.type === 'yesno' && isHorizontalSwiping) {
+        if ((currentCard.type === 'yesno') && isHorizontalSwiping) {
             if (Math.abs(deltaX) < 50) {
                 activeCard.classList.add('swiping-center');
                 activeCard.classList.remove('swiping-left', 'swiping-right', 'swiping-up', 'swiping-down');
@@ -479,11 +662,12 @@ function setupSwipeGestures() {
         if (!isActualSwipe) {
             isSwiping = false;
             isHorizontalSwiping = false;
+            logEvent('swipe_cancel', { cardIndex: currentCardIndex });
             return;
         }
         
         // Handle navigation based on card type and swipe direction
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > minSwipeDistance) {
+        if ((currentCard.type === 'yesno') && Math.abs(deltaX) > minSwipeDistance) {
             // Horizontal swipe for yes/no cards
             if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
@@ -499,7 +683,12 @@ function setupSwipeGestures() {
                 previousCard();
             } else {
                 // Swipe up - go forward or auto-advance if responded
-                if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
+                if (
+                    (currentCard.type === 'check' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'yesno' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'likert5' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'shorttext' && responses[currentCardIndex] && String(responses[currentCardIndex]).trim().length > 0)
+                ) {
                     setTimeout(() => nextCard(), 150);
                 } else {
                     nextCard();
@@ -507,8 +696,7 @@ function setupSwipeGestures() {
             }
         }
         
-        isSwiping = false;
-        isHorizontalSwiping = false;
+        finishSwipeEvent(deltaX, deltaY);
     });
     
     cardContainerEl.addEventListener('mouseup', (e) => {
@@ -534,11 +722,12 @@ function setupSwipeGestures() {
         if (!isActualSwipe) {
             isSwiping = false;
             isHorizontalSwiping = false;
+            logEvent('swipe_cancel', { cardIndex: currentCardIndex });
             return;
         }
         
         // Handle navigation based on card type and swipe direction
-        if (currentCard.type === 'yesno' && Math.abs(deltaX) > minSwipeDistance) {
+        if ((currentCard.type === 'yesno') && Math.abs(deltaX) > minSwipeDistance) {
             // Horizontal swipe for yes/no cards
             if (deltaX > 50) {
                 selectYesNo(currentCardIndex, responses[currentCardIndex] === 'yes' ? null : 'yes');
@@ -554,7 +743,12 @@ function setupSwipeGestures() {
                 previousCard();
             } else {
                 // Swipe up - go forward or auto-advance if responded
-                if ((currentCard.type === 'check' && responses[currentCardIndex]) || (currentCard.type === 'yesno' && responses[currentCardIndex])) {
+                if (
+                    (currentCard.type === 'check' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'yesno' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'likert5' && responses[currentCardIndex]) ||
+                    (currentCard.type === 'shorttext' && responses[currentCardIndex] && String(responses[currentCardIndex]).trim().length > 0)
+                ) {
                     setTimeout(() => nextCard(), 150);
                 } else {
                     nextCard();
@@ -562,8 +756,7 @@ function setupSwipeGestures() {
             }
         }
         
-        isSwiping = false;
-        isHorizontalSwiping = false;
+        finishSwipeEvent(deltaX, deltaY);
     });
 }
 
@@ -577,6 +770,7 @@ function preventPullToRefresh() {
 
 function nextCard() {
     if (currentCardIndex < cardConfig.length - 1) {
+        logEvent('advance', { from: currentCardIndex, to: currentCardIndex + 1 });
         currentCardIndex++;
         showCurrentCard();
         updateProgress();
@@ -588,6 +782,7 @@ function nextCard() {
 
 function previousCard() {
     if (currentCardIndex > 0) {
+        logEvent('back', { from: currentCardIndex, to: currentCardIndex - 1 });
         currentCardIndex--;
         showCurrentCard();
         updateProgress();
@@ -621,6 +816,8 @@ function showCompletion() {
     const checkResponses = Object.values(responses).filter(r => r === 'check').length;
     const yesResponses = Object.values(responses).filter(r => r === 'yes').length;
     const noResponses = Object.values(responses).filter(r => r === 'no').length;
+    const likertResponses = Object.values(responses).filter(r => ['1','2','3','4','5'].includes(String(r))).length;
+    const shortTextResponses = Object.values(responses).filter(r => typeof r === 'string' && r.trim().length > 0).length;
     
     cardContainerEl.innerHTML = `
         <div class="card text-card active">
@@ -634,13 +831,23 @@ function showCompletion() {
                 Yes responses: ${yesResponses}
                 <br>
                 No responses: ${noResponses}
+                <br>
+                Likert responses: ${likertResponses}
+                <br>
+                Short text responses: ${shortTextResponses}
                 <br><br>
                 Thank you for participating!
+            </div>
+            <div class="download-buttons">
+                <button class="dl-btn primary" id="dlResponses">Download responses.json</button>
+                <button class="dl-btn" id="dlParadata">Download paradata.json</button>
+                <button class="dl-btn" id="dlForm">Download form.json</button>
             </div>
         </div>
     `;
     
     console.log('All responses:', responses);
+    bindDownloadButtons();
 }
 
 // Keyboard navigation
@@ -674,4 +881,106 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize
 init();
+
+// Paradata helpers
+function logEvent(type, payload) {
+    eventLog.push({ t: performance.now(), type, ...payload });
+}
+
+function samplePointer(x, y) {
+    if (!lastPointerSample) return;
+    const now = performance.now();
+    const last = lastPointerSample[lastPointerSample.length - 1];
+    const dt = last ? now - last.t : Infinity;
+    // Record continuous move samples and emit granular 'swipe_move' for viewer fidelity
+    if (dt >= 8) { // up to ~120 Hz max
+        const sample = { t: now, x, y };
+        lastPointerSample.push(sample);
+        logEvent('swipe_move', { cardIndex: currentCardIndex, x, y, input: currentInputType });
+    }
+}
+
+function finishSwipeEvent(deltaX, deltaY) {
+    const now = performance.now();
+    const path = lastPointerSample || [];
+    let velocityX = 0, velocityY = 0;
+    if (path.length >= 2) {
+        const a = path[path.length - 2];
+        const b = path[path.length - 1];
+        const dt = (b.t - a.t) / 1000;
+        if (dt > 0) {
+            velocityX = (b.x - a.x) / dt;
+            velocityY = (b.y - a.y) / dt;
+        }
+    }
+    logEvent('swipe_end', {
+        cardIndex: currentCardIndex,
+        deltaX,
+        deltaY,
+        velocityX,
+        velocityY,
+        durationMs: path.length ? now - path[0].t : 0,
+        path: path.slice() // keep full sampled path for viewer fidelity
+    });
+    isSwiping = false;
+    isHorizontalSwiping = false;
+    lastPointerSample = null;
+}
+
+function bindDownloadButtons() {
+    const responsesBtn = document.getElementById('dlResponses');
+    const paradataBtn = document.getElementById('dlParadata');
+    const formBtn = document.getElementById('dlForm');
+    if (responsesBtn) responsesBtn.addEventListener('click', () => downloadJSON('responses.json', buildResponsesPayload()));
+    if (paradataBtn) paradataBtn.addEventListener('click', () => downloadJSON('paradata.json', buildParadataPayload()));
+    if (formBtn) formBtn.addEventListener('click', () => downloadJSON('form.json', buildFormPayload()));
+}
+
+function buildResponsesPayload() {
+    const mapped = Object.entries(responses).map(([index, value]) => {
+        const card = cardConfig[Number(index)];
+        return { cardIndex: Number(index), cardId: card.id, type: card.type, value };
+    });
+    return {
+        form: buildFormPayload(),
+        sessionId,
+        responses: mapped,
+        submittedAt: new Date().toISOString()
+    };
+}
+
+function buildParadataPayload() {
+    return {
+        form: buildFormPayload(),
+        sessionId,
+        events: eventLog,
+        device: {
+            userAgent: navigator.userAgent,
+            viewport: { width: window.innerWidth, height: window.innerHeight },
+            language: navigator.language,
+            platform: navigator.platform
+        },
+        completedAt: new Date().toISOString()
+    };
+}
+
+function buildFormPayload() {
+    return {
+        id: window.SLIK_FORM_ID || 'demo-inline',
+        title: (window.SLIK_FORM_JSON && window.SLIK_FORM_JSON.title) || 'SLIK Demo',
+        cards: cardConfig.map(c => ({ id: c.id, type: c.type, presentation: c.presentation, mainText: c.mainText, description: c.description }))
+    };
+}
+
+function downloadJSON(filename, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 

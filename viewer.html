@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLIK Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: #fff; color: #000; }
+    .viewer-wrap { max-width: 520px; margin: 0 auto; padding: 16px; }
+    .panel { border: 1px solid #e0e0e0; border-radius: 16px; padding: 12px; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .row input[type=file] { flex: 1; }
+    .meta { color: #666; font-size: 0.9em; margin-top: 8px; }
+    .movie { margin-top: 12px; height: 640px; position: relative; overflow: auto; }
+    .info { margin-top: 12px; color: #666; font-size: 0.9em; }
+    .controls { display: flex; gap: 8px; margin-top: 8px; }
+    .progress { height: 6px; background: #eaeaea; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: #000; transition: width 0.1s linear; }
+    .time { font-size: 12px; color: #666; margin-top: 6px; }
+    .btn { padding: 8px 10px; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; font-weight: 600; }
+    .overlay { position:absolute; inset:0; pointer-events:none; border-radius:16px; }
+    .dot { position:absolute; width:28px; height:28px; border-radius:50%; background:#000; opacity:0.28; transform:translate(-50%,-50%); }
+    .trail { position:absolute; width:12px; height:12px; border-radius:50%; background:#000; opacity:0.16; transform:translate(-50%,-50%); }
+  </style>
+  <script defer src="viewer.js"></script>
+</head>
+<body>
+  <div class="viewer-wrap">
+    <h2>SLIK Session Viewer</h2>
+    <div class="panel">
+      <div class="row">
+        <input id="fileInput" type="file" accept="application/json" />
+        <button id="playBtn" class="btn">Play</button>
+        <button id="pauseBtn" class="btn">Pause</button>
+        <button id="restartBtn" class="btn">Restart</button>
+      </div>
+      <div class="meta" id="meta"></div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="time" id="timeLabel">0:00.000 / 0:00.000</div>
+      <div class="movie">
+        <iframe id="player" src="about:blank" style="width:100%;height:100%;border:0;border-radius:16px; background:#fff"></iframe>
+        <div id="overlay" class="overlay"></div>
+      </div>
+      <div class="info" id="info">Load a paradata JSON exported from the app. The movie will emulate card shows, taps, and swipes using the recorded device size.</div>
+      <div class="controls">
+        <label>Speed <input id="speed" type="range" min="0.25" max="3" step="0.25" value="1" /></label>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

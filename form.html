@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>SLIK Form</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    async function boot() {
+      const params = new URLSearchParams(location.search);
+      const form = params.get('form');
+      if (form) {
+        try {
+          if (form === 'session') {
+            const raw = sessionStorage.getItem('SLIK_VIEW_FORM');
+            if (raw) {
+              const json = JSON.parse(raw);
+              window.SLIK_FORM_JSON = json;
+              window.SLIK_FORM_ID = json.id || 'session';
+            }
+          } else {
+            const res = await fetch(form);
+            const json = await res.json();
+            window.SLIK_FORM_JSON = json;
+            window.SLIK_FORM_ID = json.id || form;
+          }
+        } catch (e) {
+          console.error('Failed to load form JSON', e);
+        }
+      }
+    }
+    boot();
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div class="top-bar">
+      <div class="progress-info">
+        Card <span id="currentCard">1</span> of <span id="totalCards">0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+    <div class="card-container" id="cardContainer"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+

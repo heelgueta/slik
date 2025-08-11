@@ -1,0 +1,11 @@
+{
+  "id": "sample-2",
+  "title": "Sample Form 2",
+  "cards": [
+    { "id": 1, "type": "text", "presentation": "Hello", "mainText": "Second Sample", "description": "This is another configuration." },
+    { "id": 2, "type": "yesno", "presentation": "Choice", "mainText": "Do you like prototypes?" },
+    { "id": 3, "type": "likert5", "presentation": "Scale", "mainText": "How confident are you?", "description": "1 = not at all, 5 = very." },
+    { "id": 4, "type": "check", "presentation": "Confirm", "mainText": "I understand this is a demo" }
+  ]
+}
+

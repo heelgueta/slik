@@ -1,0 +1,12 @@
+{
+  "id": "sample-1",
+  "title": "Sample Form 1",
+  "cards": [
+    { "id": 1, "type": "text", "presentation": "Welcome", "mainText": "Welcome to Sample 1", "description": "Swipe up/down to navigate." },
+    { "id": 2, "type": "check", "presentation": "Consent", "mainText": "I agree to participate" },
+    { "id": 3, "type": "likert5", "presentation": "Agreement", "mainText": "This demo is useful", "description": "1 = strongly disagree, 5 = strongly agree." },
+    { "id": 4, "type": "shorttext", "presentation": "Short answer", "mainText": "Favorite visualization?" },
+    { "id": 5, "type": "yesno", "presentation": "Preference", "mainText": "I prefer dark UIs" }
+  ]
+}
+
